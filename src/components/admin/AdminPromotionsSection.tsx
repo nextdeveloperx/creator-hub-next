@@ -83,10 +83,6 @@ export function AdminPromotionsSection() {
     }
   };
 
-  const toggleProduct = (id: string) => {
-    set('product_ids', form.product_ids.includes(id) ? form.product_ids.filter((x) => x !== id) : [...form.product_ids, id]);
-  };
-
   const handleSubmit = async () => {
     if (!form.title.trim()) { toast({ title: 'Title is required', variant: 'destructive' }); return; }
     if (!form.discount_value || Number(form.discount_value) < 0) { toast({ title: 'Valid discount value is required (0 for banner-only)', variant: 'destructive' }); return; }
@@ -205,23 +201,19 @@ export function AdminPromotionsSection() {
 
           {form.scope === 'ai_products' && (
             <div className="space-y-2">
-              <Label>Apply to specific products (leave empty for all AI products)</Label>
-              <div className="flex flex-wrap gap-2">
-                {products.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => toggleProduct(p.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      form.product_ids.includes(p.id)
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/50'
-                    }`}
-                  >
-                    {p.name}
-                  </button>
-                ))}
-              </div>
+              <Label>Which AI product gets this offer?</Label>
+              <Select
+                value={form.product_ids[0] ?? 'all'}
+                onValueChange={(v) => set('product_ids', v === 'all' ? [] : [v])}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All AI Products</SelectItem>
+                  {products.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
