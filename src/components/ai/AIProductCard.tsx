@@ -1,11 +1,14 @@
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Check, ArrowRight, Loader2, Crown, Shield, LucideIcon } from 'lucide-react';
 import { GlowButton } from '@/components/ui/GlowButton';
+import { OfferBadge } from './OfferBadge';
 
 interface Accent { h: number; s: number; l: number }
 
 interface AIProductCardProps {
+  slug: string;
   name: string;
   tagline: string;
   price: number;
@@ -16,6 +19,7 @@ interface AIProductCardProps {
   accent: Accent;
   accent2: Accent;
   popular?: boolean;
+  onOffer?: boolean;
   processing?: boolean;
   onBuy: () => void;
   delay?: number;
@@ -27,10 +31,11 @@ interface AIProductCardProps {
  * (teal/cyan for Jarvis, violet/purple for Myra) instead of their red theme.
  */
 export function AIProductCard({
-  name, tagline, price, icon: Icon, logoUrl, badgeLabel, features, accent, accent2,
-  popular = false, processing = false, onBuy, delay = 0,
+  slug, name, tagline, price, icon: Icon, logoUrl, badgeLabel, features, accent, accent2,
+  popular = false, onOffer = false, processing = false, onBuy, delay = 0,
 }: AIProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const springX = useSpring(mouseX, { stiffness: 120, damping: 25 });
@@ -58,8 +63,10 @@ export function AIProductCard({
       style={{ rotateX, rotateY, transformPerspective: 1200 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => { mouseX.set(0.5); mouseY.set(0.5); }}
-      className="relative group rounded-3xl overflow-hidden transition-all duration-500 will-change-transform hover:-translate-y-2"
+      onClick={() => navigate(`/ai/${slug}`)}
+      className="relative group rounded-3xl overflow-hidden transition-all duration-500 will-change-transform hover:-translate-y-2 cursor-pointer"
     >
+      {onOffer && <OfferBadge className="-top-3 -left-3" />}
       <div className="absolute inset-0 rounded-3xl p-px overflow-hidden">
         <motion.div
           className="absolute inset-[-300%]"
@@ -161,7 +168,7 @@ export function AIProductCard({
             ))}
           </ul>
 
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={(e) => e.stopPropagation()}>
             <GlowButton onClick={onBuy} disabled={processing} className="w-full font-black tracking-wide rounded-2xl">
               <motion.div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100"

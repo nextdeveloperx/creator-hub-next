@@ -137,9 +137,9 @@ export function AdminPromotionsSection() {
     <GlassCard>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-bold">Promotions & Discounts</h2>
+          <h2 className="text-xl font-bold">Promotions & Offers</h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Run a site-wide event banner + discount, or one scoped to just the AI products section. Only one should be active at a time.
+            Run a site-wide event banner + discount, or put a specific AI product "on offer" — it gets pinned to the top of every AI grid with an animated OFFER badge. Only one should be active at a time.
           </p>
         </div>
         <GlowButton size="sm" onClick={() => { setShowForm(!showForm); if (showForm) resetForm(); }}>

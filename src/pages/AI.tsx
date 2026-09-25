@@ -6,8 +6,10 @@ import { PromoBanner } from '@/components/shared/PromoBanner';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Check, Loader2, Lock } from 'lucide-react';
 import { useRazorpay } from '@/hooks/useRazorpay';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PaymentModal } from '@/components/shop/PaymentModal';
+import { OfferBadge } from '@/components/ai/OfferBadge';
 import { AIHeroSection } from '@/components/ai/AIHeroSection';
 import { AIInstallSection } from '@/components/ai/AIInstallSection';
 import { AIAppDownloadSection } from '@/components/ai/AIAppDownloadSection';
@@ -96,11 +98,13 @@ interface AICardProps {
   index: number;
   onBuy: (product: AIProductRow, effectivePrice: number) => void;
   processing: boolean;
+  onOffer?: boolean;
 }
 
-function AICard({ product, displayPrice, strikePrice, index, onBuy, processing }: AICardProps) {
+function AICard({ product, displayPrice, strikePrice, index, onBuy, processing, onOffer }: AICardProps) {
   const Icon = getIcon(product.icon_name);
   const cardRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
   const springX = useSpring(mouseX, { stiffness: 150, damping: 20 });
@@ -125,9 +129,11 @@ function AICard({ product, displayPrice, strikePrice, index, onBuy, processing }
       whileHover={product.is_coming_soon ? {} : { scale: 1.04, y: -8 }}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => { mouseX.set(0.5); mouseY.set(0.5); }}
+      onClick={() => navigate(`/ai/${product.slug}`)}
       style={{ rotateX, rotateY, transformPerspective: 1000 }}
-      className="relative group"
+      className="relative group cursor-pointer"
     >
+      {onOffer && <OfferBadge className="-top-3 -left-3" />}
       <div
         className={`absolute -inset-0.5 rounded-2xl blur-lg transition-opacity duration-500 ${product.is_coming_soon ? 'opacity-20 animate-pulse' : 'opacity-30 group-hover:opacity-60'}`}
         style={{ background: `linear-gradient(135deg, ${product.gradient_from}, ${product.gradient_to})` }}
@@ -184,7 +190,7 @@ function AICard({ product, displayPrice, strikePrice, index, onBuy, processing }
         <motion.button
           whileTap={product.is_coming_soon ? {} : { scale: 0.96 }}
           disabled={processing || product.is_coming_soon}
-          onClick={() => !product.is_coming_soon && onBuy(product, displayPrice)}
+          onClick={(e) => { e.stopPropagation(); if (!product.is_coming_soon) onBuy(product, displayPrice); }}
           className="w-full py-3 rounded-lg font-semibold text-sm text-white transition-shadow duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           style={{
             background: product.is_coming_soon
@@ -221,6 +227,21 @@ export default function AI() {
     return { displayPrice, strikePrice };
   };
 
+  // A product is "on offer" when the active promotion covers it (empty product_ids = every AI product).
+  const isOnOffer = (productId: string) =>
+    !!promotion && (promotion.product_ids.length === 0 || promotion.product_ids.includes(productId));
+
+  // Offer products float to the front of every AI grid, most-recently-added order preserved otherwise.
+  const sortedProducts = useMemo(
+    () => [...products].sort((a, b) => {
+      const active = !!promotion;
+      const aOn = active && (promotion!.product_ids.length === 0 || promotion!.product_ids.includes(a.id));
+      const bOn = active && (promotion!.product_ids.length === 0 || promotion!.product_ids.includes(b.id));
+      return Number(bOn) - Number(aOn);
+    }),
+    [products, promotion]
+  );
+
   const handleBuy = (product: AIProductRow, effectivePrice: number) => {
     setSelectedProduct({ name: product.name, price: effectivePrice, gradientFrom: product.gradient_from, gradientTo: product.gradient_to });
   };
@@ -237,10 +258,11 @@ export default function AI() {
     setSelectedProduct(null);
   };
 
-  const featuredProducts = products.filter((p) => p.is_featured);
+  const featuredProducts = sortedProducts.filter((p) => p.is_featured);
   const highlightItems: HighlightItem[] = featuredProducts.map((p) => {
     const { displayPrice } = priceFor(p);
     return {
+      slug: p.slug,
       name: p.name,
       tagline: p.subtitle,
       price: displayPrice,
@@ -251,6 +273,7 @@ export default function AI() {
       accent: hexToHsl(p.gradient_from),
       accent2: hexToHsl(p.gradient_to),
       popular: p.badge.toUpperCase().includes('POPULAR'),
+      onOffer: isOnOffer(p.id),
     };
   });
 
@@ -290,10 +313,10 @@ export default function AI() {
             </div>
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6 max-w-6xl mx-auto">
-              {products.map((product, i) => {
+              {sortedProducts.map((product, i) => {
                 const { displayPrice, strikePrice } = priceFor(product);
                 return (
-                  <AICard key={product.id} product={product} displayPrice={displayPrice} strikePrice={strikePrice} index={i} onBuy={handleBuy} processing={processing} />
+                  <AICard key={product.id} product={product} displayPrice={displayPrice} strikePrice={strikePrice} index={i} onBuy={handleBuy} processing={processing} onOffer={isOnOffer(product.id)} />
                 );
               })}
             </div>
@@ -417,10 +440,10 @@ export default function AI() {
             </div>
           ) : (
             <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6 max-w-6xl mx-auto">
-              {products.map((product, i) => {
+              {sortedProducts.map((product, i) => {
                 const { displayPrice, strikePrice } = priceFor(product);
                 return (
-                  <AICard key={product.id} product={product} displayPrice={displayPrice} strikePrice={strikePrice} index={i} onBuy={handleBuy} processing={processing} />
+                  <AICard key={product.id} product={product} displayPrice={displayPrice} strikePrice={strikePrice} index={i} onBuy={handleBuy} processing={processing} onOffer={isOnOffer(product.id)} />
                 );
               })}
             </div>

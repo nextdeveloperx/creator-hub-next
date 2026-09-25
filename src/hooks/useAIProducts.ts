@@ -46,3 +46,30 @@ export function useAIProducts() {
 
   return { products, loading, refetch: fetchProducts };
 }
+
+/** A single active AI product by slug, for the product detail page. */
+export function useAIProduct(slug: string | undefined) {
+  const [product, setProduct] = useState<AIProductRow | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!slug) { setLoading(false); return; }
+    let cancelled = false;
+    setLoading(true);
+    supabase
+      .from('ai_products')
+      .select('*')
+      .eq('slug', slug)
+      .eq('is_active', true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) {
+          setProduct((data as AIProductRow) || null);
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [slug]);
+
+  return { product, loading };
+}

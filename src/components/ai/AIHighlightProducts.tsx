@@ -7,6 +7,7 @@ import { AIProductCard } from './AIProductCard';
 interface Accent { h: number; s: number; l: number }
 
 export interface HighlightItem {
+  slug: string;
   name: string;
   tagline: string;
   price: number;
@@ -17,6 +18,7 @@ export interface HighlightItem {
   accent: Accent;
   accent2: Accent;
   popular?: boolean;
+  onOffer?: boolean;
 }
 
 interface AIHighlightProductsProps {
@@ -52,6 +54,7 @@ export function AIHighlightProducts({ items, processing, onBuy }: AIHighlightPro
           {items.map((item, i) => (
             <AIProductCard
               key={item.name}
+              slug={item.slug}
               name={item.name}
               tagline={item.tagline}
               price={item.price}
@@ -62,6 +65,7 @@ export function AIHighlightProducts({ items, processing, onBuy }: AIHighlightPro
               accent={item.accent}
               accent2={item.accent2}
               popular={item.popular}
+              onOffer={item.onOffer}
               processing={processing}
               onBuy={() => onBuy(item)}
               delay={i * 0.1}

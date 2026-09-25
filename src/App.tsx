@@ -15,6 +15,7 @@ import Support from "./pages/Support";
 import Membership from "./pages/Membership";
 import Shop from "./pages/Shop";
 import AI from "./pages/AI";
+import AIProductDetail from "./pages/AIProductDetail";
 import Dashboard from "./pages/Dashboard";
 import { AdminSidebarLayout } from "@/components/admin/AdminSidebarLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
@@ -60,6 +61,7 @@ const App = () => {
               <Route path="/support" element={<Support />} />
               <Route path="/membership" element={<Membership />} />
               <Route path="/ai" element={<AI />} />
+              <Route path="/ai/:slug" element={<AIProductDetail />} />
               <Route path="/shop" element={<Shop />} />
               <Route path="/shop/:id" element={<ProductDetail />} />
               <Route path="/dashboard" element={<Dashboard />} />

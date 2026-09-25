@@ -12,7 +12,7 @@ const navItems = [
   { to: '/admin/shop-products', label: 'Shop Products', icon: ShoppingBag },
   { to: '/admin/ai-products', label: 'AI Products', icon: Sparkles },
   { to: '/admin/app-releases', label: 'App Releases', icon: DownloadCloud },
-  { to: '/admin/promotions', label: 'Promotions & Discounts', icon: Megaphone },
+  { to: '/admin/promotions', label: 'Promotions & Offers', icon: Megaphone },
 ];
 
 /** Shared sidebar + auth guard for every /admin/* route. */
