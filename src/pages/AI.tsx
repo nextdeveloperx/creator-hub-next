@@ -247,6 +247,7 @@ export default function AI() {
       features: p.features,
       badgeLabel: p.badge,
       icon: getIcon(p.icon_name),
+      logoUrl: p.logo_url,
       accent: hexToHsl(p.gradient_from),
       accent2: hexToHsl(p.gradient_to),
       popular: p.badge.toUpperCase().includes('POPULAR'),
@@ -266,6 +267,39 @@ export default function AI() {
 
       {/* Event / discount banner scoped to the AI section */}
       <PromoBanner scope="ai_products" />
+
+      {/* All AI Assistants — prominent card showcase at the very top */}
+      <section className="pt-12 pb-16 md:pt-16 md:pb-20 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block px-4 py-2 rounded-full glass-card text-secondary font-semibold text-sm tracking-wider mb-4">
+              ALL AI ASSISTANTS
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold">
+              Explore Every <span className="glow-text">AI Assistant</span>
+            </h2>
+          </motion.div>
+          {productsLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6 max-w-6xl mx-auto">
+              {products.map((product, i) => {
+                const { displayPrice, strikePrice } = priceFor(product);
+                return (
+                  <AICard key={product.id} product={product} displayPrice={displayPrice} strikePrice={strikePrice} index={i} onBuy={handleBuy} processing={processing} />
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Hero — mirrors codeninjavik's home page hero */}
       <AIHeroSection />

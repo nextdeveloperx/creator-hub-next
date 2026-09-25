@@ -10,6 +10,7 @@ interface AIProductCardProps {
   tagline: string;
   price: number;
   icon: LucideIcon;
+  logoUrl?: string | null;
   badgeLabel: string;
   features: string[];
   accent: Accent;
@@ -26,7 +27,7 @@ interface AIProductCardProps {
  * (teal/cyan for Jarvis, violet/purple for Myra) instead of their red theme.
  */
 export function AIProductCard({
-  name, tagline, price, icon: Icon, badgeLabel, features, accent, accent2,
+  name, tagline, price, icon: Icon, logoUrl, badgeLabel, features, accent, accent2,
   popular = false, processing = false, onBuy, delay = 0,
 }: AIProductCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -109,7 +110,11 @@ export function AIProductCard({
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] tracking-[0.15em] mb-7 border backdrop-blur-md font-semibold"
             style={{ background: `hsla(${hsl}, 0.08)`, borderColor: `hsla(${hsl}, 0.2)`, color: `hsl(${hsl})` }}
           >
-            <Icon size={13} />
+            {logoUrl ? (
+              <img src={logoUrl} alt={name} className="w-[13px] h-[13px] rounded-sm object-cover" />
+            ) : (
+              <Icon size={13} />
+            )}
             {badgeLabel}
           </motion.div>
 

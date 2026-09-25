@@ -13,6 +13,7 @@ export interface HighlightItem {
   features: string[];
   badgeLabel: string;
   icon: LucideIcon;
+  logoUrl?: string | null;
   accent: Accent;
   accent2: Accent;
   popular?: boolean;
@@ -55,6 +56,7 @@ export function AIHighlightProducts({ items, processing, onBuy }: AIHighlightPro
               tagline={item.tagline}
               price={item.price}
               icon={item.icon}
+              logoUrl={item.logoUrl}
               badgeLabel={item.badgeLabel}
               features={item.features}
               accent={item.accent}
