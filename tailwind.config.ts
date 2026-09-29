@@ -105,6 +105,18 @@ export default {
           "0%, 100%": { opacity: "0.4", transform: "scale(1)" },
           "50%": { opacity: "0.7", transform: "scale(1.05)" },
         },
+        "wave-drift": {
+          "0%, 100%": { transform: "translate(-2%, 0) scaleY(1)", opacity: "0.55" },
+          "50%": { transform: "translate(2%, -3%) scaleY(1.08)", opacity: "0.85" },
+        },
+        "twinkle": {
+          "0%, 100%": { opacity: "0.15" },
+          "50%": { opacity: "0.9" },
+        },
+        "shimmer-travel": {
+          "0%": { transform: "translateX(-120%)" },
+          "100%": { transform: "translateX(220%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -114,6 +126,8 @@ export default {
         "gradient-shift": "gradient-shift 4s ease infinite",
         "spin-slow": "spin-slow 20s linear infinite",
         "glow-breathe": "glow-breathe 4s ease-in-out infinite",
+        "twinkle": "twinkle 3s ease-in-out infinite",
+        "shimmer-travel": "shimmer-travel 1.8s linear infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
