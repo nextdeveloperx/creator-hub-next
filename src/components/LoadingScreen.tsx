@@ -52,12 +52,14 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
 
   const pct = Math.min(Math.round(progress), 100);
   const label = getStageLabel(pct);
+  const announced = `${label} ${Math.floor(pct / 10) * 10}% complete`;
 
   // Staged reveals derived from progress, per the requested cinematic sequence.
-  const ringReveal = clamp01((pct - 8) / 17); // 8% -> 25%
-  const logoReveal = clamp01((pct - 20) / 20); // 20% -> 40%
+  const ringReveal = Math.max(0.2, clamp01((pct - 2) / 16)); // visible almost immediately, full by ~18%
+  const logoReveal = clamp01((pct - 18) / 20); // 18% -> 38%
   const wavesOpacity = clamp01((pct - 50) / 25); // 50% -> 75%
   const finalGlow = clamp01((pct - 88) / 12); // 88% -> 100%
+  const ringGlow = 10 + ringReveal * 8 + finalGlow * 14;
 
   const stars = useMemo(
     () =>
@@ -67,6 +69,17 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
         size: i % 5 === 0 ? 2 : 1,
         dur: 2.5 + (i % 4),
         delay: (i % 6) * 0.4,
+      })),
+    []
+  );
+
+  const farStars = useMemo(
+    () =>
+      Array.from({ length: 30 }).map((_, i) => ({
+        left: `${(i * 23 + 7) % 100}%`,
+        top: `${(i * 41 + 11) % 100}%`,
+        dur: 3.5 + (i % 5),
+        delay: (i % 7) * 0.5,
       })),
     []
   );
@@ -86,6 +99,10 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: shouldReduceMotion ? 0.2 : 0.7, ease: [0.4, 0, 0.2, 1] }}
     >
+      <div className="sr-only" role="status" aria-live="polite" aria-busy={pct < 100}>
+        {announced}
+      </div>
+
       {/* ---------- Background layer ---------- */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Ambient glows */}
@@ -146,6 +163,36 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
             filter="blur(5px)"
           />
         </svg>
+        <svg
+          className={`absolute left-1/2 top-1/2 w-[160%] max-w-none -translate-x-1/2 -translate-y-1/2 ${shouldReduceMotion ? '' : 'animate-[wave-drift_17s_ease-in-out_infinite]'}`}
+          style={{ mixBlendMode: 'screen', opacity: 0.08 + wavesOpacity * 0.3 }}
+          viewBox="0 0 1600 500"
+          fill="none"
+        >
+          <defs>
+            <linearGradient id="waveC" x1="0" y1="0" x2="1600" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M -100 300 C 350 200, 650 340, 950 260 S 1450 160, 1700 320"
+            stroke="url(#waveC)"
+            strokeWidth="14"
+            strokeLinecap="round"
+            filter="blur(3px)"
+          />
+        </svg>
+
+        {/* Stars / particles — distant dim layer for parallax depth */}
+        {farStars.map((s, i) => (
+          <span
+            key={`far-${i}`}
+            className={`absolute rounded-full bg-slate-400/40 w-px h-px ${shouldReduceMotion ? 'opacity-30' : 'animate-twinkle'}`}
+            style={{ left: s.left, top: s.top, animationDuration: `${s.dur}s`, animationDelay: `${s.delay}s` }}
+          />
+        ))}
 
         {/* Stars / particles */}
         {stars.map((s, i) => (
@@ -177,6 +224,20 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
             opacity: 0.18,
           }}
         />
+
+        {/* Cinematic vignette */}
+        <div
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(ellipse 70% 65% at 50% 45%, transparent 40%, rgba(0,0,0,0.55) 100%)' }}
+        />
+
+        {/* Subtle film grain for a premium, non-flat finish */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.035]" style={{ mixBlendMode: 'overlay' }}>
+          <filter id="grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#grain)" />
+        </svg>
       </div>
 
       {/* ---------- Center content ---------- */}
@@ -203,18 +264,18 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
             viewBox="0 0 140 140"
             style={{ opacity: ringReveal }}
           >
-            <circle cx="70" cy="70" r={radius} fill="none" stroke="rgba(148,163,184,0.15)" strokeWidth="2.5" />
+            <circle cx="70" cy="70" r={radius} fill="none" stroke="rgba(148,163,184,0.15)" strokeWidth="3.5" />
             <circle
               cx="70"
               cy="70"
               r={radius}
               fill="none"
               stroke="url(#orbRing)"
-              strokeWidth="2.5"
+              strokeWidth="3.5"
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={0}
-              style={{ filter: `drop-shadow(0 0 ${6 + finalGlow * 10}px rgba(99,179,237,0.65))` }}
+              style={{ filter: `drop-shadow(0 0 ${ringGlow}px rgba(99,179,237,0.75))` }}
             />
             <defs>
               <linearGradient id="orbRing" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -225,14 +286,33 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
             </defs>
           </motion.svg>
 
+          {/* Secondary scanner ring — dashed, counter-rotating, HUD feel */}
+          <svg
+            className={`absolute inset-[6px] w-[calc(100%-12px)] h-[calc(100%-12px)] ${shouldReduceMotion ? '' : 'animate-[spin_11s_linear_infinite_reverse]'}`}
+            viewBox="0 0 140 140"
+            style={{ opacity: ringReveal * 0.6 }}
+          >
+            <circle
+              cx="70"
+              cy="70"
+              r={radius - 10}
+              fill="none"
+              stroke="#67e8f9"
+              strokeWidth="1"
+              strokeDasharray="2 6"
+              strokeLinecap="round"
+              opacity={0.7}
+            />
+          </svg>
+
           {/* Orbiting particles */}
           <div
             className={`absolute inset-0 ${shouldReduceMotion ? '' : 'animate-[spin_6s_linear_infinite]'}`}
             style={{ opacity: ringReveal }}
           >
             <span
-              className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-300"
-              style={{ boxShadow: '0 0 10px 3px rgba(34,211,238,0.8)' }}
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-cyan-300"
+              style={{ boxShadow: '0 0 14px 4px rgba(34,211,238,0.9)' }}
             />
           </div>
           <div
@@ -240,8 +320,8 @@ export const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
             style={{ opacity: ringReveal }}
           >
             <span
-              className="absolute bottom-2 right-2 w-2.5 h-2.5 rounded-full bg-fuchsia-400"
-              style={{ boxShadow: '0 0 12px 3px rgba(216,70,239,0.75)' }}
+              className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-fuchsia-400"
+              style={{ boxShadow: '0 0 16px 4px rgba(216,70,239,0.85)' }}
             />
           </div>
 
