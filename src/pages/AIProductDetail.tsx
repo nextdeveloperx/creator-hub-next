@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Check, Loader2, Lock, Star, Share2, ShieldCheck, Trash2, ThumbsUp, Download, Zap, Infinity as InfinityIcon, RefreshCw } from 'lucide-react';
 import { useAIProduct } from '@/hooks/useAIProducts';
 import { useAIReviews } from '@/hooks/useAIReviews';
+import { usePublicStats } from '@/hooks/usePublicStats';
 import { getBaseMeta, mergeRatings, formatCount } from '@/lib/aiStoreMeta';
 import { useActivePromotion, applyDiscount } from '@/hooks/useActivePromotion';
 import { useRazorpay } from '@/hooks/useRazorpay';
@@ -39,6 +40,7 @@ export default function AIProductDetail() {
   const { promotion } = useActivePromotion('ai_products');
   const { handlePurchaseWithDetails, processing } = useRazorpay();
   const { reviews, refetch: refetchReviews } = useAIReviews(product?.id);
+  const { stats: live } = usePublicStats();
   const [buying, setBuying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [myRating, setMyRating] = useState(0);
@@ -75,7 +77,7 @@ export default function AIProductDetail() {
   const strikePrice = displayPrice < product.price ? product.price : (product.original_price ?? null);
   const gradient = `linear-gradient(135deg, ${product.gradient_from}, ${product.gradient_to})`;
   const comingSoon = product.is_coming_soon;
-  const meta = mergeRatings(getBaseMeta(product.slug, product.name), reviews);
+  const meta = mergeRatings(getBaseMeta(product.slug, product.name, live.byProduct[product.name] ?? 0), reviews);
   const myReview = reviews.find((r) => r.user_id === user?.id);
 
   const handleConfirmPurchase = (name: string, mobile: string) => {

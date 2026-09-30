@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChevronRight, Mic, Cpu, Zap } from 'lucide-react';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { AnimatedStat } from '@/components/home/AnimatedStat';
+import { usePublicStats } from '@/hooks/usePublicStats';
 import { Users, Download, Star } from 'lucide-react';
 
 /** Ported from codeninjavik's HeroSection — badge, gradient heading, glass "product panel" with floating chat bubbles. */
@@ -13,9 +14,11 @@ export function AIHeroSection() {
   const contentOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
   const glowY = useTransform(scrollYProgress, [0, 1], [0, 120]);
 
+  // Base figures + real numbers from the database, so these grow as real users and buyers arrive.
+  const { stats: live, ready } = usePublicStats();
   const stats = [
-    { icon: Users, label: 'Users', value: '1.2K+' },
-    { icon: Download, label: 'Downloads', value: '5K+' },
+    { icon: Users, label: 'Users', value: `${1200 + live.users}+` },
+    { icon: Download, label: 'Downloads', value: `${5000 + live.sales}+` },
     { icon: Star, label: 'Rating', value: '4.8/5' },
   ];
 
@@ -127,7 +130,7 @@ export function AIHeroSection() {
 
             <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-border relative z-10">
               {stats.map((stat, i) => (
-                <AnimatedStat key={i} icon={stat.icon} value={stat.value} label={stat.label} delay={i * 200} />
+                <AnimatedStat key={`${i}-${ready}`} icon={stat.icon} value={stat.value} label={stat.label} delay={i * 200} />
               ))}
             </div>
           </div>

@@ -38,14 +38,15 @@ const compact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.
 
 export const formatCount = compact;
 
-export function getBaseMeta(slug: string, productName: string): StoreMeta {
+export function getBaseMeta(slug: string, productName: string, realSales = 0): StoreMeta {
   const h = hash(slug);
-  const downloads = 5000 + (h % 20) * 1000;
+  // Base figure plus real paid orders for this product, so it grows with every sale.
+  const downloads = 5000 + (h % 20) * 1000 + realSales;
 
   return {
     rating: 4.6 + (h % 4) / 10, // 4.6 – 4.9
     reviewCount: 800 + (h % 3200),
-    downloadsLabel: `${compact(downloads)}+`,
+    downloadsLabel: `${downloads.toLocaleString('en-IN')}+`, // full number so every real sale is visible
     distribution: [78, 14, 5, 2, 1],
     reviews: [
       { id: 'seed-1', name: 'Rahul S.', rating: 5, date: '12 Sep 2026', helpful: 214, real: false, text: `${productName} ne mera daily kaam kaafi easy kar diya. Setup 5 minute mein ho gaya aur voice response ekdum fast hai.` },

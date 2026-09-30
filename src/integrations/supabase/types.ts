@@ -760,6 +760,10 @@ export type Database = {
           youtube_url: string
         }[]
       }
+      get_public_stats: {
+        Args: never
+        Returns: Json
+      }
       get_public_products: {
         Args: never
         Returns: {

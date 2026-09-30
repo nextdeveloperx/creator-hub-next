@@ -10,6 +10,7 @@ import { AnimatedStat } from '@/components/home/AnimatedStat';
 import { PublishedMaterials } from '@/components/shared/PublishedMaterials';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { useLandingReducedMotion } from '@/hooks/useLandingMotion';
+import { usePublicStats } from '@/hooks/usePublicStats';
 import logo from '/logo.png';
 import '@/styles/landing.css';
 
@@ -27,12 +28,6 @@ const FUNDS = [
   { icon: GraduationCap, title: 'Mentorship', desc: 'Time to answer questions and review work.' },
 ];
 
-const IMPACT = [
-  { icon: Users, label: 'Developers helped', value: '50+' },
-  { icon: Zap, label: 'Projects created', value: '10+' },
-  { icon: Star, label: 'Resources shared', value: '25+' },
-  { icon: Clock, label: 'Hours of content', value: '100+' },
-];
 
 const MAX_AMOUNT = 100000;
 
@@ -41,6 +36,14 @@ type Errors = { name?: string; mobile?: string; amount?: string };
 export default function Support() {
   const reduce = useLandingReducedMotion();
   const uid = useId();
+  const { stats: live, ready } = usePublicStats();
+  // Base figures; "Developers helped" grows with every real signup.
+  const IMPACT = [
+    { icon: Users, label: 'Developers helped', value: `${50 + live.users}+` },
+    { icon: Zap, label: 'Projects created', value: '10+' },
+    { icon: Star, label: 'Resources shared', value: '25+' },
+    { icon: Clock, label: 'Hours of content', value: '100+' },
+  ];
   const [amount, setAmount] = useState(199);
   const [customAmount, setCustomAmount] = useState('');
   const [monthly, setMonthly] = useState(false);
@@ -140,7 +143,7 @@ export default function Support() {
 
               <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-foreground/10 pt-8">
                 {IMPACT.map((s, i) => (
-                  <div key={s.label}>
+                  <div key={`${s.label}-${ready}`}>
                     <AnimatedStat icon={s.icon} value={s.value} label={s.label} delay={i * 150} />
                   </div>
                 ))}

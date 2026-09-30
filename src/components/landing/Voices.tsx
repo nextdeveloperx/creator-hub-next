@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLandingReducedMotion } from '@/hooks/useLandingMotion';
 import { ArrowLeft, ArrowRight, Quote, Star } from 'lucide-react';
+import { usePublicStats } from '@/hooks/usePublicStats';
 
 const VOICES = [
   { name: 'Alex Chen', role: 'Frontend Developer', avatar: 'https://randomuser.me/api/portraits/men/32.jpg', text: 'This platform helped me build real projects with confidence. The code quality is exceptional and I landed my first dev job within months.' },
@@ -18,6 +19,7 @@ export function Voices() {
   const [index, setIndex] = useState(0);
   const [dir, setDir] = useState(1);
   const [hovered, setHovered] = useState(false);
+  const { stats: live } = usePublicStats();
 
   const go = useCallback((next: number, d: number) => {
     setDir(d);
@@ -51,7 +53,7 @@ export function Voices() {
               <div className="flex gap-0.5" role="img" aria-label="5 out of 5 stars">
                 {[0, 1, 2, 3, 4].map((i) => <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" aria-hidden="true" />)}
               </div>
-              <p className="text-sm text-muted-foreground mt-0.5">500+ members</p>
+              <p className="text-sm text-muted-foreground mt-0.5">{(500 + live.members).toLocaleString('en-IN')}+ members</p>
             </div>
           </div>
         </div>
