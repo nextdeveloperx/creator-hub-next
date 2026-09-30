@@ -37,7 +37,7 @@ function Chip({ t }: { t: Tech }) {
       className="lp-glass lp-chip group flex items-center gap-3.5 !rounded-2xl pl-3.5 pr-6 py-3 whitespace-nowrap select-none"
       style={{ ['--chip' as string]: `#${t.color}` }}
     >
-      <span className="grid place-items-center w-11 h-11 rounded-xl bg-white/[0.06] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-6deg]">
+      <span className="grid place-items-center w-11 h-11 rounded-xl bg-foreground/[0.06] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-6deg]">
         {broken ? (
           <span className="font-bold text-lg" style={{ color: `#${t.color}` }}>{t.name[0]}</span>
         ) : (

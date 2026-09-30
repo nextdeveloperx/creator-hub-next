@@ -50,7 +50,7 @@ export function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.5, delay: (i % 2) * 0.1 }}
-                className="group rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-7 transition-colors hover:border-white/25 hover:bg-white/[0.06]"
+                className="group rounded-3xl border border-foreground/10 bg-foreground/[0.03] p-6 sm:p-7 transition-colors hover:border-foreground/25 hover:bg-foreground/[0.06]"
               >
                 <span className="grid place-items-center w-12 h-12 rounded-2xl mb-5 transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-105" style={{ background: 'var(--lp-grad)' }}>
                   <s.icon className="w-6 h-6 text-white" aria-hidden="true" />

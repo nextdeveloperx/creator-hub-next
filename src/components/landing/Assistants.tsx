@@ -121,7 +121,7 @@ export function Assistants() {
         </motion.div>
         {pinned && (
           <div className="container mx-auto mt-10" aria-hidden="true">
-            <div className="h-1 rounded-full bg-white/10 overflow-hidden">
+            <div className="h-1 rounded-full bg-foreground/10 overflow-hidden">
               <motion.div className="h-full origin-left rounded-full" style={{ scaleX: scrollYProgress, background: 'var(--lp-grad)' }} />
             </div>
           </div>

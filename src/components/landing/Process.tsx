@@ -22,13 +22,13 @@ export function Process() {
         <h2 className="lp-h2 max-w-[16ch] mb-16">From click to <span className="lp-gradient-text">running</span> in minutes</h2>
 
         <ol className="relative grid gap-12 md:grid-cols-3 md:gap-8">
-          <span className="hidden md:block absolute top-8 left-0 right-0 h-px bg-white/15" aria-hidden="true" />
+          <span className="hidden md:block absolute top-8 left-0 right-0 h-px bg-foreground/15" aria-hidden="true" />
           <motion.span
             className="hidden md:block absolute top-8 left-0 right-0 h-[3px] -mt-px origin-left rounded-full"
             style={{ scaleX: reduce ? 1 : grow, background: 'var(--lp-grad)' }}
             aria-hidden="true"
           />
-          <span className="md:hidden absolute top-0 bottom-0 left-8 w-px bg-white/15" aria-hidden="true" />
+          <span className="md:hidden absolute top-0 bottom-0 left-8 w-px bg-foreground/15" aria-hidden="true" />
           <motion.span
             className="md:hidden absolute top-0 bottom-0 left-8 w-[3px] -ml-px origin-top rounded-full"
             style={{ scaleY: reduce ? 1 : grow, background: 'var(--lp-grad)' }}

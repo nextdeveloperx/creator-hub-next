@@ -34,7 +34,7 @@ export function Story() {
               <img
                 src={creatorProfile}
                 alt="Creator of Next Developer"
-                className="relative w-full h-full rounded-full object-cover bg-[hsl(234_40%_10%)] border-4 border-[hsl(234_50%_5%)]"
+                className="relative w-full h-full rounded-full object-cover bg-card border-4 border-background"
                 loading="lazy"
               />
               <motion.span
@@ -62,7 +62,7 @@ export function Story() {
 
             <ul className="grid sm:grid-cols-3 gap-3 mt-9">
               {PILLARS.map((p) => (
-                <li key={p.title} className="group rounded-2xl border border-white/10 bg-white/[0.04] p-4 flex sm:flex-col items-center sm:items-start gap-4 sm:gap-3 transition-colors hover:border-white/25 hover:bg-white/[0.07]">
+                <li key={p.title} className="group rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-4 flex sm:flex-col items-center sm:items-start gap-4 sm:gap-3 transition-colors hover:border-foreground/25 hover:bg-foreground/[0.07]">
                   <span className="grid place-items-center w-11 h-11 rounded-xl shrink-0 transition-transform duration-300 group-hover:-rotate-6" style={{ background: 'var(--lp-grad)' }}>
                     <p.icon className="w-5 h-5 text-white" aria-hidden="true" />
                   </span>

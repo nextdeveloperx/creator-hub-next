@@ -6,6 +6,51 @@
   violet -> cyan as the single brand gradient. No light bands.
 */
 .lp {
+  /* Light theme (default) */
+  --background: 250 60% 97%;
+  --foreground: 234 40% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 234 40% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 234 40% 12%;
+  --muted: 250 40% 93%;
+  --muted-foreground: 235 18% 36%;
+  --border: 245 30% 84%;
+  --input: 245 30% 84%;
+  --primary: 262 85% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 190 90% 32%;
+  --secondary-foreground: 0 0% 100%;
+  --accent: 190 90% 32%;
+  --accent-foreground: 0 0% 100%;
+  --ring: 262 85% 52%;
+
+  --lp-violet: 262 85% 55%;
+  --lp-cyan: 190 90% 33%;
+  --lp-pink: 322 80% 50%;
+  --lp-iris: 262 85% 55%;
+  --lp-signal: 190 90% 33%;
+  --lp-grad: linear-gradient(120deg, hsl(262 85% 56%), hsl(222 90% 52%) 55%, hsl(190 90% 40%));
+  --lp-text-grad: linear-gradient(100deg, hsl(262 85% 52%), hsl(222 90% 48%) 40%, hsl(190 90% 34%) 70%, hsl(262 85% 52%));
+  --lp-glass-a: hsl(0 0% 100% / 0.92);
+  --lp-glass-b: hsl(250 60% 98% / 0.82);
+  --lp-glass-edge: hsl(245 30% 80%);
+  --lp-glass-shadow: 0 18px 40px -24px hsl(250 45% 30% / 0.35);
+  --lp-aurora-a: hsl(262 92% 65% / 0.28);
+  --lp-aurora-b: hsl(200 95% 55% / 0.22);
+  --lp-aurora-c: hsl(322 85% 65% / 0.16);
+  --lp-dot: hsl(234 40% 12% / 0.09);
+  --lp-pad: clamp(4.5rem, 9vw, 8.5rem);
+
+  position: relative;
+  isolation: isolate;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+.dark .lp {
   --background: 234 50% 5%;
   --foreground: 230 40% 97%;
   --card: 234 40% 10%;
@@ -30,14 +75,15 @@
   --lp-iris: 262 92% 70%;
   --lp-signal: 188 95% 58%;
   --lp-grad: linear-gradient(120deg, hsl(262 92% 66%), hsl(222 95% 62%) 55%, hsl(188 95% 58%));
-  --lp-pad: clamp(4.5rem, 9vw, 8.5rem);
-
-  position: relative;
-  isolation: isolate;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  overflow-x: clip;
+  --lp-text-grad: linear-gradient(100deg, hsl(262 95% 76%), hsl(222 95% 72%) 40%, hsl(188 95% 64%) 70%, hsl(262 95% 76%));
+  --lp-glass-a: hsl(232 38% 14% / 0.92);
+  --lp-glass-b: hsl(234 40% 9% / 0.92);
+  --lp-glass-edge: hsl(230 40% 97% / 0.12);
+  --lp-glass-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.08);
+  --lp-aurora-a: hsl(262 92% 50% / 0.55);
+  --lp-aurora-b: hsl(200 95% 45% / 0.34);
+  --lp-aurora-c: hsl(322 85% 50% / 0.28);
+  --lp-dot: hsl(230 40% 97% / 0.1);
 }
 
 .lp .lp-display,
@@ -75,7 +121,7 @@
 .lp-section { padding-block: var(--lp-pad); position: relative; }
 
 .lp-gradient-text {
-  background: linear-gradient(100deg, hsl(262 95% 76%), hsl(222 95% 72%) 40%, hsl(188 95% 64%) 70%, hsl(262 95% 76%));
+  background: var(--lp-text-grad);
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -90,15 +136,15 @@
   position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
   transform: translateZ(0);
   background:
-    radial-gradient(60vw 60vw at 5% -10%, hsl(262 92% 50% / 0.55), transparent 65%),
-    radial-gradient(55vw 55vw at 105% 25%, hsl(200 95% 45% / 0.34), transparent 65%),
-    radial-gradient(50vw 50vw at 35% 115%, hsl(322 85% 50% / 0.28), transparent 65%),
+    radial-gradient(60vw 60vw at 5% -10%, var(--lp-aurora-a), transparent 65%),
+    radial-gradient(55vw 55vw at 105% 25%, var(--lp-aurora-b), transparent 65%),
+    radial-gradient(50vw 50vw at 35% 115%, var(--lp-aurora-c), transparent 65%),
     hsl(var(--background));
 }
 .lp-blob { display: none; }
 .lp-dots {
   position: absolute; inset: 0;
-  background-image: radial-gradient(hsl(230 40% 97% / 0.1) 1px, transparent 1px);
+  background-image: radial-gradient(var(--lp-dot) 1px, transparent 1px);
   background-size: 34px 34px;
   mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 75%);
@@ -106,10 +152,10 @@
 
 /* ---------- Glass ---------- */
 .lp-glass {
-  background: linear-gradient(145deg, hsl(232 38% 14% / 0.92), hsl(234 40% 9% / 0.92));
-  border: 1px solid hsl(230 40% 97% / 0.12);
+  background: linear-gradient(145deg, var(--lp-glass-a), var(--lp-glass-b));
+  border: 1px solid var(--lp-glass-edge);
   border-radius: 1.75rem;
-  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.08);
+  box-shadow: var(--lp-glass-shadow);
 }
 
 /* Gradient hairline that lights up on hover */
@@ -154,11 +200,11 @@
 .lp-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 54px -12px hsl(262 92% 62% / 0.9); }
 .lp-btn-primary:hover::after { transform: translateX(120%); transition: transform 700ms ease; }
 .lp-btn-ghost {
-  border: 1.5px solid hsl(230 40% 97% / 0.25);
-  background: hsl(230 40% 97% / 0.04);
+  border: 1.5px solid hsl(var(--foreground) / 0.28);
+  background: hsl(var(--foreground) / 0.04);
   color: hsl(var(--foreground));
 }
-.lp-btn-ghost:hover { border-color: hsl(230 40% 97% / 0.7); background: hsl(230 40% 97% / 0.1); }
+.lp-btn-ghost:hover { border-color: hsl(var(--foreground) / 0.7); background: hsl(var(--foreground) / 0.08); }
 
 /* ---------- Marquees ---------- */
 @keyframes lp-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
@@ -230,3 +276,10 @@
 
 /* framer-motion measures scroll offsets against the root <html> element, which needs a non-static position */
 html.nd-wide { position: relative; }
+
+/* The 3D orb is additive light: on the light theme it needs a dark stage to read. */
+.lp-stage { border-radius: 2.5rem; }
+.lp:not(:where(.dark *)) .lp-stage {
+  background: radial-gradient(circle at 50% 45%, hsl(250 60% 18%), hsl(240 60% 6%) 75%);
+  box-shadow: 0 30px 60px -30px hsl(250 60% 20% / 0.6);
+}

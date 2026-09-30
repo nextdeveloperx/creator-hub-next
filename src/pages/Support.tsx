@@ -1,313 +1,350 @@
-import { useState } from 'react';
-import { Layout } from '@/components/layout/Layout';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { GlowButton } from '@/components/ui/GlowButton';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/lib/auth';
-import { useRazorpay } from '@/hooks/useRazorpay';
-import { getSafeErrorMessage } from '@/lib/safeError';
-import { Coffee, Heart, Sparkles, Star, Zap, Shield, Users, MessageCircle } from 'lucide-react';
-import { PublishedMaterials } from '@/components/shared/PublishedMaterials';
+import { useEffect, useId, useState } from 'react';
 import { motion } from 'framer-motion';
+import {
+  Coffee, Heart, ShieldCheck, Zap, Repeat, Video, Code2, Package, GraduationCap,
+  Users, Star, Clock, Loader2, BadgeCheck,
+} from 'lucide-react';
+import { Layout } from '@/components/layout/Layout';
+import { Aurora } from '@/components/landing/Aurora';
+import { AnimatedStat } from '@/components/home/AnimatedStat';
+import { PublishedMaterials } from '@/components/shared/PublishedMaterials';
+import { useRazorpay } from '@/hooks/useRazorpay';
+import { useLandingReducedMotion } from '@/hooks/useLandingMotion';
 import logo from '/logo.png';
+import '@/styles/landing.css';
 
-const presetAmounts = [99, 199, 499, 999];
-
-const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-  transition: { delay, duration: 0.5, type: 'spring' as const, stiffness: 120 },
-});
-
-const impactStats = [
-  { icon: Users, label: 'Developers Helped', value: '50+', color: 'text-blue-400' },
-  { icon: Zap, label: 'Projects Created', value: '10+', color: 'text-amber-400' },
-  { icon: Star, label: 'Resources Shared', value: '25+', color: 'text-pink-400' },
-  { icon: Shield, label: 'Hours of Content', value: '100+', color: 'text-emerald-400' },
+const PRESETS = [
+  { amount: 99, label: '1 coffee' },
+  { amount: 199, label: '2 coffees' },
+  { amount: 499, label: '5 coffees' },
+  { amount: 999, label: '10 coffees' },
 ];
 
-export default function Support() {
-  const [amount, setAmount] = useState(199);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [message, setMessage] = useState('');
-  const [isMonthly, setIsMonthly] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
+const FUNDS = [
+  { icon: Video, title: 'Video tutorials', desc: 'Step-by-step builds you can follow along.' },
+  { icon: Code2, title: 'Open source', desc: 'Tools and starter code that stay free.' },
+  { icon: Package, title: 'Free resources', desc: 'Templates and guides for the community.' },
+  { icon: GraduationCap, title: 'Mentorship', desc: 'Time to answer questions and review work.' },
+];
 
+const IMPACT = [
+  { icon: Users, label: 'Developers helped', value: '50+' },
+  { icon: Zap, label: 'Projects created', value: '10+' },
+  { icon: Star, label: 'Resources shared', value: '25+' },
+  { icon: Clock, label: 'Hours of content', value: '100+' },
+];
+
+const MAX_AMOUNT = 100000;
+
+type Errors = { name?: string; mobile?: string; amount?: string };
+
+export default function Support() {
+  const reduce = useLandingReducedMotion();
+  const uid = useId();
+  const [amount, setAmount] = useState(199);
+  const [customAmount, setCustomAmount] = useState('');
+  const [monthly, setMonthly] = useState(false);
+  const [name, setName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState<Errors>({});
   const { handlePurchaseWithDetails, processing } = useRazorpay();
 
-  const handleSupport = async () => {
-    if (!name.trim() || !mobile.trim() || amount < 1) {
-      toast({ title: 'Please fill in required fields', variant: 'destructive' });
-      return;
-    }
-    if (!/^\d{10}$/.test(mobile.trim())) {
-      toast({ title: 'Enter a valid 10-digit mobile number', variant: 'destructive' });
-      return;
-    }
+  // Same wide layout + footer stacking as the home page
+  useEffect(() => {
+    document.documentElement.classList.add('nd-wide');
+    return () => document.documentElement.classList.remove('nd-wide');
+  }, []);
 
-    const label = isMonthly ? `Monthly Support - ₹${amount}` : `One-time Support - ₹${amount}`;
+  const coffees = Math.max(1, Math.round(amount / 99));
+  const isPreset = PRESETS.some((p) => p.amount === amount) && customAmount === '';
+
+  const validate = (): Errors => {
+    const e: Errors = {};
+    if (!name.trim()) e.name = 'Enter your name.';
+    if (!/^\d{10}$/.test(mobile.trim())) e.mobile = 'Enter a 10-digit mobile number.';
+    if (!Number.isFinite(amount) || amount < 1) e.amount = 'Enter an amount of at least ₹1.';
+    else if (amount > MAX_AMOUNT) e.amount = `The maximum is ₹${MAX_AMOUNT.toLocaleString('en-IN')}.`;
+    return e;
+  };
+
+  const handleSupport = () => {
+    const e = validate();
+    setErrors(e);
+    if (Object.keys(e).length > 0) {
+      document.getElementById(`${uid}-${e.amount ? 'amount' : e.name ? 'name' : 'mobile'}`)?.focus();
+      return;
+    }
+    const label = monthly ? `Monthly Support - ₹${amount}` : `One-time Support - ₹${amount}`;
     handlePurchaseWithDetails({ productName: label, price: amount, userName: name.trim(), userMobile: mobile.trim() });
   };
 
+  const pickPreset = (value: number) => {
+    setAmount(value);
+    setCustomAmount('');
+    setErrors((e) => ({ ...e, amount: undefined }));
+  };
+
+  const onCustom = (raw: string) => {
+    const clean = raw.replace(/\D/g, '').slice(0, 6);
+    setCustomAmount(clean);
+    setAmount(clean ? Number(clean) : 0);
+    setErrors((e) => ({ ...e, amount: undefined }));
+  };
+
+  const field = 'w-full h-12 rounded-xl border bg-background/60 px-4 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))] transition-colors';
+
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="relative py-12 overflow-hidden">
-        {/* Animated background orbs */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-10 left-[10%] w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-[pulse_4s_ease-in-out_infinite]" />
-          <div className="absolute bottom-10 right-[10%] w-80 h-80 bg-pink-500/10 rounded-full blur-3xl animate-[pulse_5s_ease-in-out_infinite_1s]" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-secondary/8 rounded-full blur-3xl animate-[pulse_6s_ease-in-out_infinite_2s]" />
-        </div>
+      <div className="lp">
+        <Aurora />
 
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div {...fadeUp(0)} className="text-center mb-10">
-            <motion.div
-              className="inline-flex p-5 rounded-full bg-gradient-to-br from-primary/20 via-pink-500/20 to-secondary/20 mb-6 relative"
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Coffee className="w-14 h-14 text-primary" />
-              <Sparkles className="w-5 h-5 text-amber-400 absolute -top-1 -right-1 animate-[pulse_2s_ease-in-out_infinite]" />
-            </motion.div>
-            <h1 className="text-5xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-primary via-pink-400 to-secondary bg-clip-text text-transparent">
-              Support My Work
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-              Your support fuels free content, open-source tools & resources for the developer community
-            </p>
-          </motion.div>
-
-          {/* Impact Stats */}
-          <motion.div {...fadeUp(0.15)} className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto mb-16">
-            {impactStats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 + i * 0.1, type: 'spring', stiffness: 150 }}
-                whileHover={{ scale: 1.08, y: -4 }}
-                className="group text-center p-4 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_20px_-5px] hover:shadow-primary/20"
-              >
-                <stat.icon className={`w-7 h-7 mx-auto mb-2 ${stat.color} group-hover:scale-110 transition-transform duration-300`} />
-                <p className="text-2xl font-black bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+        <section className="pt-14 pb-20 lg:pt-20 lg:pb-28">
+          <div className="container mx-auto grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+            {/* Story */}
+            <div className="lg:col-span-5 lg:sticky lg:top-28">
+              <motion.div initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+                <p className="lp-glass !rounded-full inline-flex items-center gap-2.5 px-4 py-2 text-sm text-muted-foreground">
+                  <Coffee className="w-4 h-4 text-[hsl(var(--lp-cyan))]" aria-hidden="true" />
+                  Buy me a coffee
+                </p>
+                <h1 className="lp-display mt-6 text-[clamp(2.6rem,6vw,5rem)]">
+                  Support the <span className="lp-gradient-text">work</span>
+                </h1>
+                <p className="lp-lead mt-6 text-muted-foreground">
+                  Your support pays for free tutorials, open-source tools and resources for developers who are just getting started.
+                </p>
               </motion.div>
-            ))}
-          </motion.div>
 
-          {/* Main Support Card */}
-          <motion.div {...fadeUp(0.3)} className="max-w-2xl mx-auto">
-            <div className="relative">
-              <GlassCard className="relative overflow-hidden">
-                {/* Top gradient line */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-pink-500 to-secondary" />
-
-                {/* Profile Header */}
-                <div className="flex items-center gap-4 mb-8 pb-6 border-b border-border/50 relative">
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    transition={{ type: 'spring' as const, stiffness: 300 }}
-                    className="relative"
+              <h2 className="lp-title mt-10 mb-4">What your support funds</h2>
+              <ul className="grid sm:grid-cols-2 gap-3">
+                {FUNDS.map((f, i) => (
+                  <motion.li
+                    key={f.title}
+                    initial={reduce ? false : { opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.15 + i * 0.07, duration: 0.5 }}
+                    className="lp-glass !rounded-2xl p-4 flex gap-3"
                   >
-                    <img src={logo} alt="Profile" className="w-16 h-16 rounded-full border-2 border-primary shadow-lg shadow-primary/20" />
-                    <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-background flex items-center justify-center">
-                      <span className="text-[8px] text-white font-bold">✓</span>
+                    <span className="grid place-items-center w-10 h-10 rounded-xl shrink-0" style={{ background: 'var(--lp-grad)' }}>
+                      <f.icon className="w-5 h-5 text-white" aria-hidden="true" />
                     </span>
-                  </motion.div>
-                  <div>
-                    <h3 className="font-bold text-lg flex items-center gap-2">
-                      Next Developer
-                      <Sparkles className="w-4 h-4 text-amber-400" />
-                    </h3>
-                    <p className="text-muted-foreground text-sm flex items-center gap-1">
-                      Buy me a coffee <span className="text-lg">☕</span>
-                    </p>
-                  </div>
-                  <div className="ml-auto hidden sm:block">
-                    <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 text-emerald-400 border border-emerald-500/20">
-                      ✓ Verified Creator
+                    <span>
+                      <span className="block font-bold text-sm">{f.title}</span>
+                      <span className="block text-xs text-muted-foreground mt-0.5 leading-relaxed">{f.desc}</span>
                     </span>
-                  </div>
-                </div>
+                  </motion.li>
+                ))}
+              </ul>
 
-                <div className="space-y-6">
-                  {/* Coffee Visual Section */}
-                  <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-pink-500/5 to-secondary/5 border border-border/30">
-                    <p className="text-sm text-muted-foreground mb-1">Each coffee fuels</p>
-                    <div className="flex items-center justify-center gap-6 text-xs text-foreground/80">
-                      <span className="flex flex-col items-center gap-1">
-                        <span className="text-2xl">📹</span>
-                        <span>Video Tutorials</span>
-                      </span>
-                      <span className="flex flex-col items-center gap-1">
-                        <span className="text-2xl">💻</span>
-                        <span>Open Source</span>
-                      </span>
-                      <span className="flex flex-col items-center gap-1">
-                        <span className="text-2xl">📦</span>
-                        <span>Free Resources</span>
-                      </span>
-                      <span className="flex flex-col items-center gap-1">
-                        <span className="text-2xl">🎓</span>
-                        <span>Mentorship</span>
-                      </span>
+              <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-foreground/10 pt-8">
+                {IMPACT.map((s, i) => (
+                  <div key={s.label}>
+                    <AnimatedStat icon={s.icon} value={s.value} label={s.label} delay={i * 150} />
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* Payment card */}
+            <motion.div
+              initial={reduce ? false : { opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:col-span-7"
+            >
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleSupport(); }}
+                noValidate
+                className="lp-glass !rounded-[2rem] overflow-hidden"
+              >
+                <div className="h-1.5" style={{ background: 'var(--lp-grad)' }} aria-hidden="true" />
+
+                <div className="p-6 sm:p-9 space-y-8">
+                  <div className="flex items-center gap-4">
+                    <img src={logo} alt="" className="w-14 h-14 rounded-full ring-2 ring-[hsl(var(--lp-violet))] ring-offset-2 ring-offset-card" />
+                    <div className="min-w-0">
+                      <p className="font-bold text-lg flex items-center gap-1.5">
+                        Next Developer
+                        <BadgeCheck className="w-5 h-5 text-[hsl(var(--lp-cyan))]" aria-label="Verified creator" />
+                      </p>
+                      <p className="text-sm text-muted-foreground">Full-stack developer and creator</p>
                     </div>
                   </div>
 
-                  {/* Amount Selection */}
-                  <div>
-                    <Label className="mb-3 block text-sm font-semibold flex items-center gap-2">
-                      <Heart className="w-4 h-4 text-pink-400" /> Choose Your Support
-                    </Label>
-                    <div className="grid grid-cols-4 gap-3 mb-3">
-                      {presetAmounts.map((preset) => {
-                        const coffeeCount = Math.max(1, Math.round(preset / 99));
-                        const isSelected = amount === preset;
+                  {/* One-time / Monthly */}
+                  <fieldset>
+                    <legend className="text-sm font-bold mb-3">How often?</legend>
+                    <div className="grid grid-cols-2 gap-1.5 p-1.5 rounded-2xl bg-foreground/[0.06]" role="radiogroup">
+                      {[
+                        { value: false, label: 'One-time', icon: Coffee },
+                        { value: true, label: 'Monthly', icon: Repeat },
+                      ].map((o) => {
+                        const on = monthly === o.value;
                         return (
-                          <motion.div
-                            key={preset}
-                            whileHover={{ scale: 1.05, y: -2 }}
-                            whileTap={{ scale: 0.95 }}
+                          <button
+                            key={o.label}
+                            type="button"
+                            role="radio"
+                            aria-checked={on}
+                            onClick={() => setMonthly(o.value)}
+                            className={`h-12 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))] ${
+                              on ? 'text-white shadow-md' : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                            style={on ? { background: 'var(--lp-grad)' } : undefined}
                           >
-                            <button
-                              onClick={() => setAmount(preset)}
-                              className={`w-full py-3 rounded-xl text-sm font-bold transition-all duration-300 border-2 relative overflow-hidden ${
-                                isSelected
-                                  ? 'border-primary bg-primary/15 text-primary shadow-lg shadow-primary/20'
-                                  : 'border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                              }`}
-                            >
-                              <span className="text-base mb-0.5 block">{'☕'.repeat(Math.min(coffeeCount, 4))}</span>
-                              <span>₹{preset}</span>
-                              {isSelected && (
-                                <motion.div
-                                  layoutId="amount-glow"
-                                  className="absolute inset-0 rounded-xl bg-primary/5"
-                                  transition={{ type: 'spring' as const, stiffness: 300 }}
-                                />
-                              )}
-                            </button>
-                          </motion.div>
+                            <o.icon className="w-4 h-4" aria-hidden="true" />
+                            {o.label}
+                          </button>
                         );
                       })}
                     </div>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(Number(e.target.value))}
-                        placeholder="Or enter custom amount"
-                        min={1}
-                        className="bg-muted/30 pl-8"
+                    {monthly && (
+                      <p className="text-xs text-muted-foreground mt-2">Helps me plan ahead. You pay for one month at a time.</p>
+                    )}
+                  </fieldset>
+
+                  {/* Amount */}
+                  <fieldset>
+                    <legend className="text-sm font-bold mb-3 flex items-center gap-2">
+                      <Heart className="w-4 h-4 text-[hsl(var(--lp-pink))]" aria-hidden="true" /> Choose an amount
+                    </legend>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" role="radiogroup" aria-label="Preset amounts">
+                      {PRESETS.map((p) => {
+                        const on = amount === p.amount && customAmount === '';
+                        return (
+                          <button
+                            key={p.amount}
+                            type="button"
+                            role="radio"
+                            aria-checked={on}
+                            onClick={() => pickPreset(p.amount)}
+                            className={`relative rounded-2xl border-2 px-3 py-4 text-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))] ${
+                              on
+                                ? 'border-[hsl(var(--lp-violet))] bg-[hsl(var(--lp-violet)/0.12)] -translate-y-0.5 shadow-lg'
+                                : 'border-foreground/10 bg-foreground/[0.03] hover:border-foreground/30'
+                            }`}
+                          >
+                            <span className="block text-xl font-black tabular-nums">₹{p.amount}</span>
+                            <span className="block text-xs text-muted-foreground mt-0.5">{p.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-3 relative">
+                      <label htmlFor={`${uid}-amount`} className="sr-only">Custom amount in rupees</label>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true">₹</span>
+                      <input
+                        id={`${uid}-amount`}
+                        inputMode="numeric"
+                        value={customAmount}
+                        onChange={(e) => onCustom(e.target.value)}
+                        placeholder="Or type your own amount"
+                        aria-invalid={!!errors.amount}
+                        aria-describedby={errors.amount ? `${uid}-amount-err` : undefined}
+                        className={`${field} pl-9 ${errors.amount ? 'border-destructive' : 'border-foreground/15'}`}
                       />
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">₹</span>
                     </div>
-                  </div>
+                    {errors.amount && <p id={`${uid}-amount-err`} role="alert" className="text-sm text-destructive mt-2">{errors.amount}</p>}
+                    {!errors.amount && amount >= 1 && (
+                      <p className="text-sm text-muted-foreground mt-2" aria-live="polite">
+                        {isPreset || customAmount ? `That is about ${coffees} ${coffees === 1 ? 'coffee' : 'coffees'}. Thank you!` : ''}
+                      </p>
+                    )}
+                  </fieldset>
 
-                  {/* Divider */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-                    <span className="text-xs text-muted-foreground font-medium">YOUR DETAILS</span>
-                    <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-                  </div>
-
-                  {/* Form Fields */}
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <motion.div className="space-y-1.5" whileFocus={{ scale: 1.01 }}>
-                      <Label className="text-sm flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-blue-400" /> Your Name *
-                      </Label>
-                      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className="bg-muted/30 focus:bg-muted/50 transition-colors" />
-                    </motion.div>
-                    <div className="space-y-1.5">
-                      <Label className="text-sm flex items-center gap-1.5">
-                        <Zap className="w-3.5 h-3.5 text-amber-400" /> Mobile Number *
-                      </Label>
-                      <Input type="tel" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile" className="bg-muted/30 focus:bg-muted/50 transition-colors" />
+                  {/* Details */}
+                  <div className="space-y-5">
+                    <h2 className="text-sm font-bold">Your details</h2>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor={`${uid}-name`} className="block text-sm mb-1.5">Name <span className="text-destructive" aria-hidden="true">*</span></label>
+                        <input
+                          id={`${uid}-name`}
+                          autoComplete="name"
+                          value={name}
+                          onChange={(e) => { setName(e.target.value); setErrors((x) => ({ ...x, name: undefined })); }}
+                          placeholder="Your name"
+                          required
+                          aria-invalid={!!errors.name}
+                          aria-describedby={errors.name ? `${uid}-name-err` : undefined}
+                          className={`${field} ${errors.name ? 'border-destructive' : 'border-foreground/15'}`}
+                        />
+                        {errors.name && <p id={`${uid}-name-err`} role="alert" className="text-sm text-destructive mt-1.5">{errors.name}</p>}
+                      </div>
+                      <div>
+                        <label htmlFor={`${uid}-mobile`} className="block text-sm mb-1.5">Mobile number <span className="text-destructive" aria-hidden="true">*</span></label>
+                        <input
+                          id={`${uid}-mobile`}
+                          type="tel"
+                          inputMode="numeric"
+                          autoComplete="tel-national"
+                          value={mobile}
+                          onChange={(e) => { setMobile(e.target.value.replace(/\D/g, '').slice(0, 10)); setErrors((x) => ({ ...x, mobile: undefined })); }}
+                          placeholder="10-digit number"
+                          required
+                          aria-invalid={!!errors.mobile}
+                          aria-describedby={errors.mobile ? `${uid}-mobile-err` : undefined}
+                          className={`${field} ${errors.mobile ? 'border-destructive' : 'border-foreground/15'}`}
+                        />
+                        {errors.mobile && <p id={`${uid}-mobile-err`} role="alert" className="text-sm text-destructive mt-1.5">{errors.mobile}</p>}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <Star className="w-3.5 h-3.5 text-pink-400" /> Email (optional)
-                    </Label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="bg-muted/30 focus:bg-muted/50 transition-colors" />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-sm flex items-center gap-1.5">
-                      <MessageCircle className="w-3.5 h-3.5 text-secondary" /> Message (optional)
-                    </Label>
-                    <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Say something nice... 💬" rows={3} className="bg-muted/30 focus:bg-muted/50 transition-colors" />
-                  </div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 cursor-pointer"
-                    onClick={() => setIsMonthly(!isMonthly)}
-                  >
-                    <Checkbox id="monthly" checked={isMonthly} onCheckedChange={(c) => setIsMonthly(c as boolean)} />
                     <div>
-                      <Label htmlFor="monthly" className="cursor-pointer text-sm font-medium">
-                        Make this monthly
-                      </Label>
-                      <p className="text-xs text-muted-foreground">Support consistently & help me plan ahead</p>
+                      <label htmlFor={`${uid}-email`} className="block text-sm mb-1.5">Email <span className="text-muted-foreground">(optional)</span></label>
+                      <input id={`${uid}-email`} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={`${field} border-foreground/15`} />
                     </div>
-                    <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
-                      Recurring
-                    </span>
-                  </motion.div>
 
-                  {/* CTA Button */}
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <GlowButton className="w-full text-base py-6 relative overflow-hidden" size="lg" onClick={handleSupport} disabled={processing}>
-                      {processing ? 'Processing...' : (
-                        <span className="flex items-center gap-2">
-                          <Heart className="w-5 h-5 animate-[pulse_1.5s_ease-in-out_infinite]" fill="currentColor" />
-                          Support with ₹{amount}
-                          <Coffee className="w-4 h-4" />
-                        </span>
-                      )}
-                    </GlowButton>
-                  </motion.div>
+                    <div>
+                      <label htmlFor={`${uid}-msg`} className="block text-sm mb-1.5">Message <span className="text-muted-foreground">(optional)</span></label>
+                      <textarea
+                        id={`${uid}-msg`}
+                        rows={3}
+                        maxLength={300}
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Say something nice"
+                        className="w-full rounded-xl border border-foreground/15 bg-background/60 px-4 py-3 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))]"
+                      />
+                    </div>
+                  </div>
 
-                  {/* Trust Badges */}
-                  <div className="flex items-center justify-center gap-3 flex-wrap">
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-muted/30 border border-border/30">
-                      <Shield className="w-3.5 h-3.5 text-emerald-400" /> Secure Payment
-                    </span>
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-muted/30 border border-border/30">
-                      <Zap className="w-3.5 h-3.5 text-amber-400" /> Instant Processing
-                    </span>
-                    <span className="flex items-center gap-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-muted/30 border border-border/30">
-                      🇮🇳 Razorpay
-                    </span>
+                  <div>
+                    <button type="submit" disabled={processing} className="lp-btn lp-btn-primary w-full !min-h-[3.75rem] text-base disabled:opacity-60 disabled:pointer-events-none">
+                      {processing ? <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" /> : <Heart className="w-5 h-5" fill="currentColor" aria-hidden="true" />}
+                      {processing ? 'Opening secure checkout' : `Support with ₹${amount >= 1 ? amount.toLocaleString('en-IN') : '…'}${monthly ? ' / month' : ''}`}
+                    </button>
+
+                    <ul className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                      {[
+                        { icon: ShieldCheck, text: 'Secure payment' },
+                        { icon: Zap, text: 'Instant confirmation' },
+                        { icon: BadgeCheck, text: 'Powered by Razorpay' },
+                      ].map((t) => (
+                        <li key={t.text} className="flex items-center gap-1.5 text-xs text-muted-foreground px-3 py-1.5 rounded-full border border-foreground/10">
+                          <t.icon className="w-3.5 h-3.5 text-[hsl(var(--lp-cyan))]" aria-hidden="true" /> {t.text}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
-              </GlassCard>
-            </div>
-          </motion.div>
+              </form>
 
-          {/* Motivational Text */}
-          <motion.div {...fadeUp(0.45)} className="text-center mt-12 max-w-md mx-auto">
-            <p className="text-sm text-muted-foreground italic">
-              "Every contribution, no matter how small, helps me keep creating free resources and tools for developers worldwide." 
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">— Next Developer</p>
-          </motion.div>
-        </div>
-      </section>
+              <figure className="mt-8 text-center max-w-md mx-auto">
+                <blockquote className="text-sm text-muted-foreground italic leading-relaxed">
+                  “Every contribution, no matter how small, helps me keep creating free resources and tools for developers worldwide.”
+                </blockquote>
+                <figcaption className="text-xs text-muted-foreground mt-2">Next Developer</figcaption>
+              </figure>
+            </motion.div>
+          </div>
+        </section>
 
-      <PublishedMaterials section="Support" title="Support Resources" subtitle="Helpful materials and guides" />
+        <PublishedMaterials section="Support" title="Support Resources" subtitle="Helpful materials and guides" />
+      </div>
     </Layout>
   );
 }

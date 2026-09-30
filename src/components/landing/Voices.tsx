@@ -44,7 +44,7 @@ export function Voices() {
           <div className="mt-8 flex items-center gap-4">
             <div className="flex -space-x-3" aria-hidden="true">
               {VOICES.map((p) => (
-                <img key={p.name} src={p.avatar} alt="" className="w-11 h-11 rounded-full object-cover border-2 border-[hsl(234_50%_5%)]" loading="lazy" />
+                <img key={p.name} src={p.avatar} alt="" className="w-11 h-11 rounded-full object-cover border-2 border-background" loading="lazy" />
               ))}
             </div>
             <div>
@@ -85,7 +85,7 @@ export function Voices() {
                     “{v.text}”
                   </blockquote>
                   <figcaption className="mt-auto pt-8 flex items-center gap-4">
-                    <img src={v.avatar} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-white/20" />
+                    <img src={v.avatar} alt="" className="w-14 h-14 rounded-full object-cover ring-2 ring-foreground/20" />
                     <span>
                       <span className="block font-bold">{v.name}</span>
                       <span className="block text-sm text-muted-foreground">{v.role}</span>
@@ -107,15 +107,15 @@ export function Voices() {
                   onClick={() => go(i, i > index ? 1 : -1)}
                   className="h-11 flex items-center px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))] rounded-full"
                 >
-                  <span className={`block h-1.5 rounded-full transition-all duration-300 ${i === index ? 'w-10' : 'w-4 bg-white/25'}`} style={i === index ? { background: 'var(--lp-grad)' } : undefined} />
+                  <span className={`block h-1.5 rounded-full transition-all duration-300 ${i === index ? 'w-10' : 'w-4 bg-foreground/25'}`} style={i === index ? { background: 'var(--lp-grad)' } : undefined} />
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => go(index - 1, -1)} aria-label="Previous review" className="w-11 h-11 grid place-items-center rounded-full border border-white/20 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))]">
+              <button onClick={() => go(index - 1, -1)} aria-label="Previous review" className="w-11 h-11 grid place-items-center rounded-full border border-foreground/20 hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))]">
                 <ArrowLeft className="w-5 h-5" aria-hidden="true" />
               </button>
-              <button onClick={() => go(index + 1, 1)} aria-label="Next review" className="w-11 h-11 grid place-items-center rounded-full border border-white/20 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))]">
+              <button onClick={() => go(index + 1, 1)} aria-label="Next review" className="w-11 h-11 grid place-items-center rounded-full border border-foreground/20 hover:bg-foreground/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--lp-cyan))]">
                 <ArrowRight className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>

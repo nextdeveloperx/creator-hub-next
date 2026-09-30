@@ -24,7 +24,7 @@ export function Roadmap() {
             const c = CFG[it.status];
             return (
               <li key={it.title} className="lp-glass p-6 flex flex-col gap-10 min-h-[15rem]">
-                <span className="grid place-items-center w-11 h-11 rounded-full" style={{ background: c.tone, color: 'hsl(234 50% 5%)' }}>
+                <span className="grid place-items-center w-11 h-11 rounded-full" style={{ background: c.tone, color: 'hsl(var(--background))' }}>
                   <c.icon className={`w-5 h-5 ${c.spin ? 'motion-safe:animate-spin' : ''}`} aria-hidden="true" />
                 </span>
                 <div>

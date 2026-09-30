@@ -54,7 +54,7 @@ export function Membership() {
                 <Crown className="w-6 h-6 text-[hsl(var(--lp-cyan))]" aria-hidden="true" />
                 Premium content
               </span>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/10 text-foreground">{LOCKED.length} items locked</span>
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-foreground/10 text-foreground">{LOCKED.length} items locked</span>
             </div>
 
             <ul className="space-y-3">
@@ -65,9 +65,9 @@ export function Membership() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/10"
+                  className="flex items-center gap-3 p-3.5 rounded-2xl bg-foreground/5 border border-foreground/10"
                 >
-                  <span className="w-12 h-12 rounded-xl bg-white/10 grid place-items-center shrink-0">
+                  <span className="w-12 h-12 rounded-xl bg-foreground/10 grid place-items-center shrink-0">
                     <item.icon className="w-5 h-5 text-[hsl(var(--lp-cyan))]" aria-hidden="true" />
                   </span>
                   <div className="flex-1 min-w-0">
