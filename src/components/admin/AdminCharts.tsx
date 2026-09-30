@@ -1,15 +1,19 @@
 import { useMemo } from 'react';
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, AreaChart, Area, RadarChart,
-  Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  Tooltip, ResponsiveContainer, AreaChart, Area,
 } from 'recharts';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { motion } from 'framer-motion';
 
-interface Supporter { name: string; amount: number; created_at: string; }
-interface Material { content_type: string; category: string | null; is_premium: boolean; download_count?: number; }
-interface AdminChartsProps { supporters: Supporter[]; materials: Material[]; }
+interface Sale { product_name: string; amount: number; created_at: string }
+interface Supporter { amount: number; created_at: string }
+interface AdminChartsProps {
+  /** Paid purchases only. */
+  purchases: Sale[];
+  supporters: Supporter[];
+  catalog: { name: string; value: number }[];
+}
 
 const COLORS = ['#8b5cf6', '#06b6d4', '#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#a855f7', '#14b8a6'];
 
@@ -18,63 +22,51 @@ const tooltipStyle = {
   border: '1px solid rgba(139,92,246,0.4)',
   borderRadius: 14,
   color: '#fff',
-  boxShadow: '0 8px 32px rgba(139,92,246,0.15)',
   padding: '10px 14px',
   fontSize: 13,
 };
 
-export function AdminCharts({ supporters, materials }: AdminChartsProps) {
-  // Revenue data - accumulate by month
+const monthKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}`;
+
+export function AdminCharts({ purchases, supporters, catalog }: AdminChartsProps) {
+  // Last 6 calendar months, zero-filled so the line never has gaps.
   const revenueByMonth = useMemo(() => {
-    if (supporters.length === 0) return [];
-    const months: Record<string, number> = {};
-    supporters.forEach((s) => {
-      const d = new Date(s.created_at);
-      const key = `${d.toLocaleString('default', { month: 'short' })} '${String(d.getFullYear()).slice(2)}`;
-      months[key] = (months[key] || 0) + (s.amount || 0);
+    const now = new Date();
+    const months = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      return { key: monthKey(d), name: d.toLocaleString('en-IN', { month: 'short' }), revenue: 0 };
     });
-    return Object.entries(months).map(([name, revenue]) => ({ name, revenue })).reverse();
-  }, [supporters]);
+    const byKey = new Map(months.map((m) => [m.key, m]));
+    [...purchases, ...supporters].forEach((row) => {
+      const m = byKey.get(monthKey(new Date(row.created_at)));
+      if (m) m.revenue += row.amount || 0;
+    });
+    return months;
+  }, [purchases, supporters]);
 
-  // Top supporters bar chart
-  const topSupporters = useMemo(() => {
-    return [...supporters].sort((a, b) => b.amount - a.amount).slice(0, 5).map((s) => ({ name: s.name, amount: s.amount }));
-  }, [supporters]);
+  const hasRevenue = revenueByMonth.some((m) => m.revenue > 0);
 
-  // Materials by type
-  const materialsByType = useMemo(() => {
-    if (materials.length === 0) return [];
-    const types: Record<string, number> = {};
-    materials.forEach((m) => { types[m.content_type || 'Other'] = (types[m.content_type || 'Other'] || 0) + 1; });
-    return Object.entries(types).map(([name, value]) => ({ name, value }));
-  }, [materials]);
+  const byProduct = useMemo(() => {
+    const map = new Map<string, { name: string; revenue: number; sales: number }>();
+    purchases.forEach((p) => {
+      const cur = map.get(p.product_name) || { name: p.product_name, revenue: 0, sales: 0 };
+      cur.revenue += p.amount || 0;
+      cur.sales += 1;
+      map.set(p.product_name, cur);
+    });
+    return [...map.values()].sort((a, b) => b.revenue - a.revenue);
+  }, [purchases]);
 
-  // Content health radar
-  const radarData = useMemo(() => {
-    const total = materials.length || 1;
-    const premium = materials.filter((m) => m.is_premium).length;
-    const cats = new Set(materials.map((m) => m.category).filter(Boolean)).size;
-    const types = new Set(materials.map((m) => m.content_type).filter(Boolean)).size;
-    const downloads = materials.reduce((s, m) => s + (m.download_count || 0), 0);
-    return [
-      { metric: 'Total', value: Math.min(total * 20, 100), fullMark: 100 },
-      { metric: 'Premium', value: Math.min((premium / total) * 100, 100), fullMark: 100 },
-      { metric: 'Categories', value: Math.min(cats * 25, 100), fullMark: 100 },
-      { metric: 'Types', value: Math.min(types * 25, 100), fullMark: 100 },
-      { metric: 'Downloads', value: Math.min(downloads * 5, 100), fullMark: 100 },
-    ];
-  }, [materials]);
+  const top = byProduct.slice(0, 6);
+  const catalogTotal = catalog.reduce((s, c) => s + c.value, 0);
 
   return (
     <div className="grid md:grid-cols-2 gap-6 mb-8">
-      {/* Revenue Over Time */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <GlassCard className="h-full">
-          <h3 className="text-lg font-bold mb-1 bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
-            💰 Revenue Timeline
-          </h3>
-          <p className="text-xs text-muted-foreground mb-4">Monthly revenue from supporters</p>
-          {revenueByMonth.length > 0 ? (
+          <h3 className="text-lg font-bold mb-1">Revenue, last 6 months</h3>
+          <p className="text-xs text-muted-foreground mb-4">Paid sales plus supporter contributions</p>
+          {hasRevenue ? (
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={revenueByMonth} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                 <defs>
@@ -86,90 +78,75 @@ export function AdminCharts({ supporters, materials }: AdminChartsProps) {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [`₹${value}`, 'Revenue']} />
-                <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={3} fill="url(#revGrad)" dot={{ r: 5, fill: '#8b5cf6', stroke: '#1e1b4b', strokeWidth: 2 }} activeDot={{ r: 7, fill: '#a855f7', stroke: '#fff', strokeWidth: 2 }} animationDuration={1500} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`₹${v}`, 'Revenue']} />
+                <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={3} fill="url(#revGrad)" dot={{ r: 4, fill: '#8b5cf6' }} animationDuration={900} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">No revenue data yet</div>
+            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">No paid sales yet</div>
           )}
         </GlassCard>
       </motion.div>
 
-      {/* Top Supporters */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <GlassCard className="h-full">
-          <h3 className="text-lg font-bold mb-1 bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-            🏆 Top Supporters
-          </h3>
-          <p className="text-xs text-muted-foreground mb-4">Highest contribution amounts</p>
-          {topSupporters.length > 0 ? (
+          <h3 className="text-lg font-bold mb-1">Top selling products</h3>
+          <p className="text-xs text-muted-foreground mb-4">By revenue</p>
+          {top.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={topSupporters} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }} barCategoryGap="25%">
+              <BarChart data={top} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }} barCategoryGap="25%">
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
                 <XAxis type="number" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" tick={{ fill: '#e2e8f0', fontSize: 12, fontWeight: 600 }} width={70} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => [`₹${value}`, 'Amount']} />
-                <Bar dataKey="amount" radius={[0, 8, 8, 0]} animationDuration={1200} animationEasing="ease-out">
-                  {topSupporters.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
+                <YAxis dataKey="name" type="category" tick={{ fill: '#e2e8f0', fontSize: 11, fontWeight: 600 }} width={110} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number, _n, item) => [`₹${v} · ${item.payload.sales} sold`, 'Revenue']} />
+                <Bar dataKey="revenue" radius={[0, 8, 8, 0]} animationDuration={900}>
+                  {top.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">No supporters yet</div>
+            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">No paid sales yet</div>
           )}
         </GlassCard>
       </motion.div>
 
-      {/* Materials by Type - Donut */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.5 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <GlassCard className="h-full">
-          <h3 className="text-lg font-bold mb-1 bg-gradient-to-r from-cyan-400 to-green-400 bg-clip-text text-transparent">
-            📦 Materials Breakdown
-          </h3>
-          <p className="text-xs text-muted-foreground mb-4">Content types distribution</p>
-          {materialsByType.length > 0 ? (
+          <h3 className="text-lg font-bold mb-1">Sales share</h3>
+          <p className="text-xs text-muted-foreground mb-4">Number of units sold per product</p>
+          {byProduct.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={materialsByType} cx="50%" cy="50%" outerRadius={85} innerRadius={50} paddingAngle={5} dataKey="value"
-                     label={({ name, value }) => `${name} (${value})`}
-                     labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
-                     animationBegin={200} animationDuration={1200}>
-                  {materialsByType.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="rgba(0,0,0,0.3)" strokeWidth={1} />
-                  ))}
+                <Pie data={byProduct} dataKey="sales" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={50} paddingAngle={4} animationDuration={900}>
+                  {byProduct.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="rgba(0,0,0,0.3)" />)}
                 </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number, n: string) => [`${v} sold`, n]} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">No materials yet</div>
+            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">No paid sales yet</div>
           )}
         </GlassCard>
       </motion.div>
 
-      {/* Content Health Radar */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.5 }}>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
         <GlassCard className="h-full">
-          <h3 className="text-lg font-bold mb-1 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-            🎯 Content Health Score
-          </h3>
-          <p className="text-xs text-muted-foreground mb-4">Overall content quality metrics</p>
-          {materials.length > 0 ? (
+          <h3 className="text-lg font-bold mb-1">Catalog overview</h3>
+          <p className="text-xs text-muted-foreground mb-4">What is live on the site</p>
+          {catalogTotal > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius={75}>
-                <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                <PolarAngleAxis dataKey="metric" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
-                <Radar dataKey="value" stroke="#a855f7" fill="#a855f7" fillOpacity={0.3} strokeWidth={2}
-                       dot={{ r: 4, fill: '#a855f7', stroke: '#1e1b4b', strokeWidth: 2 }}
-                       animationDuration={1500} />
-              </RadarChart>
+              <BarChart data={catalog} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} interval={0} />
+                <YAxis allowDecimals={false} tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} animationDuration={900}>
+                  {catalog.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">No materials yet</div>
+            <div className="flex items-center justify-center h-[220px] text-muted-foreground text-sm">Nothing published yet</div>
           )}
         </GlassCard>
       </motion.div>

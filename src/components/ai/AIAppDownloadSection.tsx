@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Smartphone, Monitor, DownloadCloud, Sparkles } from 'lucide-react';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { useAppReleases } from '@/hooks/useAppReleases';
+import { usePageSection } from '@/hooks/usePageSection';
+import { SectionTitle } from './SectionTitle';
 
 const BANNER = '/assets/myra-app/promo-banner.png';
 
@@ -14,6 +16,9 @@ const platformIcon = (platform: string) => (platform === 'android' ? Smartphone 
 export function AIAppDownloadSection() {
   const { releases: allReleases, loading } = useAppReleases();
   const releases = allReleases.filter((r) => r.platform === 'android');
+  const { section } = usePageSection('android_app');
+  if (section && !section.is_visible) return null;
+  const buttonText = section?.button_text || 'Download';
 
   return (
     <section className="py-20 md:py-28 relative overflow-hidden">
@@ -29,13 +34,13 @@ export function AIAppDownloadSection() {
           className="text-center max-w-2xl mx-auto mb-10"
         >
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-primary/30 text-primary text-sm font-semibold tracking-wide mb-4">
-            <DownloadCloud className="w-4 h-4" /> DOWNLOADS
+            <DownloadCloud className="w-4 h-4" /> {section?.eyebrow || 'DOWNLOADS'}
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-            Get the <span className="glow-text">Android App</span>
+            <SectionTitle title={section?.title ?? 'Get the'} highlight={section?.highlight ?? 'Android App'} />
           </h2>
           <p className="text-muted-foreground text-base md:text-lg">
-            Your voice assistant lives in your pocket. Grab the latest build, straight from the source.
+            {section?.description || 'Your voice assistant lives in your pocket. Grab the latest build, straight from the source.'}
           </p>
         </motion.div>
 
@@ -45,8 +50,18 @@ export function AIAppDownloadSection() {
           viewport={{ once: true }}
           className="max-w-4xl mx-auto mb-10 rounded-2xl overflow-hidden gradient-border"
         >
-          <img src={BANNER} alt="MYRA — Your AI Assistant" className="w-full aspect-video md:aspect-[21/9] object-cover" loading="lazy" />
+          <img src={section?.banner_url || BANNER} alt="MYRA — Your AI Assistant" className="w-full aspect-video md:aspect-[21/9] object-cover" loading="lazy" />
         </motion.div>
+
+        {section?.button_url && (
+          <div className="max-w-4xl mx-auto mb-10 text-center">
+            <a href={section.button_url} target="_blank" rel="noopener noreferrer">
+              <GlowButton className="px-8">
+                <DownloadCloud className="w-4 h-4" /> {buttonText}
+              </GlowButton>
+            </a>
+          </div>
+        )}
 
         <div className={`grid gap-6 max-w-4xl mx-auto ${releases.length > 1 ? 'md:grid-cols-2' : 'max-w-xl'}`}>
           {loading ? (
@@ -98,7 +113,7 @@ export function AIAppDownloadSection() {
 
                     <a href={release.download_url} target="_blank" rel="noopener noreferrer" className="block">
                       <GlowButton className="w-full">
-                        <DownloadCloud className="w-4 h-4" /> Download
+                        <DownloadCloud className="w-4 h-4" /> {buttonText}
                       </GlowButton>
                     </a>
                   </div>

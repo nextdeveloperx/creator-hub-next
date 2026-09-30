@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { Layout } from '@/components/layout/Layout';
 import { NavLink } from '@/components/NavLink';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Sparkles, DownloadCloud, Megaphone, FileText, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Sparkles, DownloadCloud, Megaphone, FileText, ShoppingBag, PanelsTopLeft } from 'lucide-react';
 
 const navItems = [
   { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/admin/shop-products', label: 'Shop Products', icon: ShoppingBag },
   { to: '/admin/ai-products', label: 'AI Products', icon: Sparkles },
   { to: '/admin/app-releases', label: 'App Releases', icon: DownloadCloud },
+  { to: '/admin/page-sections', label: 'AI Page Sections', icon: PanelsTopLeft },
   { to: '/admin/promotions', label: 'Promotions & Offers', icon: Megaphone },
 ];
 

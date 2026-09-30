@@ -500,6 +500,45 @@ export type Database = {
           },
         ]
       }
+      page_sections: {
+        Row: {
+          banner_url: string | null
+          button_text: string
+          button_url: string | null
+          description: string
+          eyebrow: string
+          highlight: string
+          is_visible: boolean
+          key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          button_text?: string
+          button_url?: string | null
+          description?: string
+          eyebrow?: string
+          highlight?: string
+          is_visible?: boolean
+          key: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          button_text?: string
+          button_url?: string | null
+          description?: string
+          eyebrow?: string
+          highlight?: string
+          is_visible?: boolean
+          key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_files: {
         Row: {
           created_at: string

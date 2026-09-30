@@ -19,6 +19,7 @@ interface FormState {
   release_notes: string;
   download_url: string;
   file_size_mb: string;
+  icon_url: string;
   is_published: boolean;
 }
 
@@ -30,6 +31,7 @@ const EMPTY: FormState = {
   release_notes: '',
   download_url: '',
   file_size_mb: '',
+  icon_url: '',
   is_published: false,
 };
 
@@ -42,6 +44,8 @@ export function AppReleaseSection() {
   const [saving, setSaving] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
 
   const fetchReleases = useCallback(async () => {
     const { data } = await supabase.from('app_releases').select('*').order('created_at', { ascending: false });
@@ -67,6 +71,7 @@ export function AppReleaseSection() {
       release_notes: r.release_notes || '',
       download_url: r.download_url,
       file_size_mb: r.file_size_mb ? String(r.file_size_mb) : '',
+      icon_url: r.icon_url || '',
       is_published: r.is_published,
     });
     setEditingId(r.id);
@@ -97,6 +102,21 @@ export function AppReleaseSection() {
     }
   };
 
+  // App icon shown on the release card (public image bucket)
+  const handleIconUpload = async (file: File) => {
+    setUploadingIcon(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `release-icons/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from('ai-product-media').upload(path, file);
+      if (error) { toast({ title: 'Icon upload failed', description: error.message, variant: 'destructive' }); return; }
+      set('icon_url', supabase.storage.from('ai-product-media').getPublicUrl(path).data.publicUrl);
+    } finally {
+      setUploadingIcon(false);
+      if (iconInputRef.current) iconInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.app_name.trim()) { toast({ title: 'App name is required', variant: 'destructive' }); return; }
     if (!form.version_name.trim()) { toast({ title: 'Version is required', variant: 'destructive' }); return; }
@@ -112,6 +132,7 @@ export function AppReleaseSection() {
         release_notes: form.release_notes.trim() || null,
         download_url: form.download_url.trim(),
         file_size_mb: form.file_size_mb ? Number(form.file_size_mb) : null,
+        icon_url: form.icon_url.trim() || null,
         is_published: form.is_published,
       };
 
@@ -216,6 +237,21 @@ export function AppReleaseSection() {
           </div>
 
           <div className="space-y-2">
+            <Label>App Icon (optional)</Label>
+            <input ref={iconInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleIconUpload(e.target.files[0])} />
+            {form.icon_url ? (
+              <div className="flex items-center gap-3">
+                <img src={form.icon_url} alt="App icon" className="w-14 h-14 rounded-2xl object-cover border border-border" />
+                <button type="button" aria-label="Remove icon" onClick={() => set('icon_url', '')} className="p-1.5 rounded-md hover:bg-muted"><X className="w-4 h-4" /></button>
+              </div>
+            ) : (
+              <div onClick={() => iconInputRef.current?.click()} className="border-2 border-dashed rounded-lg p-4 cursor-pointer text-center text-sm text-muted-foreground hover:border-primary/50 transition-colors">
+                {uploadingIcon ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : <><UploadCloud className="w-4 h-4 mx-auto mb-1" />Upload app icon</>}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label>Download Link (auto-filled after upload, or paste one directly)</Label>
             <Input placeholder="https://..." value={form.download_url} onChange={(e) => set('download_url', e.target.value)} className="font-mono text-sm" />
           </div>
@@ -250,9 +286,13 @@ export function AppReleaseSection() {
           const Icon = r.platform === 'android' ? Smartphone : Monitor;
           return (
             <div key={r.id} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/10">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
-                <Icon className="w-5 h-5 text-primary-foreground" />
-              </div>
+              {r.icon_url ? (
+                <img src={r.icon_url} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-border" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0">
+                  <Icon className="w-5 h-5 text-primary-foreground" />
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-sm truncate">{r.app_name} <span className="text-muted-foreground font-normal">v{r.version_name}</span></p>
                 <p className="text-xs text-muted-foreground">{r.platform}{r.file_size_mb ? ` • ${r.file_size_mb} MB` : ''}</p>

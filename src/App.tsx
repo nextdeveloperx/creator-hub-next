@@ -24,6 +24,7 @@ import AdminShopProducts from "./pages/admin/AdminShopProducts";
 import AdminAIProducts from "./pages/admin/AdminAIProducts";
 import AdminAppReleases from "./pages/admin/AdminAppReleases";
 import AdminPromotions from "./pages/admin/AdminPromotions";
+import AdminPageSections from "./pages/admin/AdminPageSections";
 import NotFound from "./pages/NotFound";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -71,6 +72,7 @@ const App = () => {
                 <Route path="shop-products" element={<AdminShopProducts />} />
                 <Route path="ai-products" element={<AdminAIProducts />} />
                 <Route path="app-releases" element={<AdminAppReleases />} />
+                <Route path="page-sections" element={<AdminPageSections />} />
                 <Route path="promotions" element={<AdminPromotions />} />
               </Route>
               <Route path="/privacy" element={<Privacy />} />

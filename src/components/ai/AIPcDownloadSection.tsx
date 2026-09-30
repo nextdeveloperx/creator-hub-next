@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { Monitor, DownloadCloud, Sparkles } from 'lucide-react';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { useAppReleases } from '@/hooks/useAppReleases';
+import { usePageSection } from '@/hooks/usePageSection';
+import { SectionTitle } from './SectionTitle';
 
 const BANNER = '/assets/myra-pc/promo-banner.png';
 
@@ -21,10 +23,16 @@ const pcControllerFeatures = [
 export function AIPcDownloadSection() {
   const { releases, loading } = useAppReleases();
   const release = releases.find((r) => r.platform === 'windows') ?? null;
+  const { section } = usePageSection('pc_controller');
+  if (section && !section.is_visible) return null;
+
+  // A link set in the admin panel wins over the latest published Windows release.
+  const downloadUrl = section?.button_url || release?.download_url || null;
+  const buttonText = section?.button_text || 'Download Myra PC Controller (.exe)';
 
   const handleDownload = () => {
-    if (!release?.download_url) return;
-    window.open(release.download_url, '_blank', 'noopener,noreferrer');
+    if (!downloadUrl) return;
+    window.open(downloadUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -40,13 +48,13 @@ export function AIPcDownloadSection() {
           className="text-center max-w-2xl mx-auto mb-10"
         >
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border border-secondary/30 text-secondary text-sm font-semibold tracking-wider mb-4">
-            <Monitor size={16} /> PC CONTROLLER
+            <Monitor size={16} /> {section?.eyebrow || 'PC CONTROLLER'}
           </span>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-            Control Your <span className="glow-text">PC</span> from Your Phone
+            <SectionTitle title={section?.title ?? 'Control Your PC from Your Phone'} highlight={section?.highlight ?? 'PC'} />
           </h2>
           <p className="text-muted-foreground text-base md:text-lg">
-            Free desktop companion for Windows — connect it to the Myra Android app and control your PC's screen, files and apps right from your phone.
+            {section?.description || "Free desktop companion for Windows — connect it to the Myra Android app and control your PC's screen, files and apps right from your phone."}
           </p>
         </motion.div>
 
@@ -58,7 +66,7 @@ export function AIPcDownloadSection() {
         >
           <div className="relative rounded-2xl overflow-hidden gradient-border">
             <div className="glass-card overflow-hidden">
-              <img src={BANNER} alt="Myra PC Controller" className="w-full aspect-video object-cover" loading="lazy" />
+              <img src={section?.banner_url || BANNER} alt="Myra PC Controller" className="w-full aspect-video object-cover" loading="lazy" />
 
               <div className="p-6 md:p-8">
                 {loading ? (
@@ -94,9 +102,9 @@ export function AIPcDownloadSection() {
                       ))}
                     </ul>
 
-                    {release?.download_url ? (
+                    {downloadUrl ? (
                       <GlowButton onClick={handleDownload} className="w-full">
-                        <DownloadCloud size={18} /> Download Myra PC Controller (.exe)
+                        <DownloadCloud size={18} /> {buttonText}
                       </GlowButton>
                     ) : (
                       <div className="text-center py-4 text-muted-foreground text-sm">
