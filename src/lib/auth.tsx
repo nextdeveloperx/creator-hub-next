@@ -111,7 +111,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/dashboard`;
+    // /auth sends admins to /admin and everyone else to /dashboard once the role check finishes.
+    // Needs https://nextdeveloper.in/** in Supabase → Authentication → URL Configuration → Redirect URLs.
+    const redirectUrl = `${window.location.origin}/auth`;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
