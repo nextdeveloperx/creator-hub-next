@@ -35,13 +35,14 @@ export default function Auth() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, isAdmin, adminChecked } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) navigate('/dashboard');
-  }, [user, navigate]);
+    // Wait for the role check so admins land on /admin instead of the customer dashboard
+    if (user && adminChecked) navigate(isAdmin ? '/admin' : '/dashboard', { replace: true });
+  }, [user, isAdmin, adminChecked, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +70,6 @@ export default function Auth() {
         if (error) throw error;
         toast({ title: 'Welcome back!' });
       }
-      navigate('/dashboard');
     } catch (error: unknown) {
       toast({ title: 'Error', description: getSafeErrorMessage(error), variant: 'destructive' });
     } finally {

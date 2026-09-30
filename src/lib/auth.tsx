@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Defer admin check with setTimeout
         if (session?.user) {
+          setAdminChecked(false);
           setTimeout(() => {
             checkAdminRole(session.user.id);
           }, 0);
