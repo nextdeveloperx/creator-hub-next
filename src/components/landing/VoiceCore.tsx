@@ -72,11 +72,11 @@ void main(){
 }`;
 
 const GLOW_FRAG = /* glsl */ `
-uniform vec3 uHot; uniform float uAmp; varying vec2 vUv;
+uniform vec3 uHot; uniform float uAmp; uniform float uGain; varying vec2 vUv;
 void main(){
   float d = distance(vUv, vec2(0.5));
   float a = smoothstep(0.5, 0.0, d);
-  gl_FragColor = vec4(uHot, a * a * (0.35 + uAmp * 1.4));
+  gl_FragColor = vec4(uHot, a * a * (0.35 + uAmp * 1.4) * uGain);
 }`;
 
 const POINTS_VERT = /* glsl */ `
@@ -180,7 +180,7 @@ export default function VoiceCore({
     const glowMat = new THREE.ShaderMaterial({
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
       fragmentShader: GLOW_FRAG,
-      uniforms: { uHot: { value: hot }, uAmp: { value: 0.05 } },
+      uniforms: { uHot: { value: hot }, uAmp: { value: 0.05 }, uGain: { value: 1 } },
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -240,6 +240,26 @@ export default function VoiceCore({
       target.y = (e.clientY / window.innerHeight) * 2 - 1;
     };
     window.addEventListener("pointermove", onPointer, { passive: true });
+
+    // Additive light only shows on a dark page. On the light theme switch to normal blending and deeper colours.
+    const ptsColor = ptsMat.uniforms.uColor.value as THREE.Color;
+    const applyTheme = () => {
+      const dark = document.documentElement.classList.contains("dark");
+      deep.set(dark ? "#2b0f7a" : "#5b34e0");
+      hot.set(dark ? "#8b5cff" : "#7c3aed");
+      ptsColor.set(dark ? "#9be7ff" : "#4f46e5");
+      shellMat.color.set(dark ? "#8b5cff" : "#7c3aed");
+      shellMat.opacity = dark ? 0.08 : 0.22;
+      glowMat.uniforms.uGain.value = dark ? 1 : 0.5;
+      const blend = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
+      glowMat.blending = blend;
+      ptsMat.blending = blend;
+      glowMat.needsUpdate = true;
+      ptsMat.needsUpdate = true;
+    };
+    applyTheme();
+    const themeObserver = new MutationObserver(applyTheme);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     let noMotion = false; // home page keeps the orb fully animated; see hooks/useLandingMotion.ts
@@ -319,6 +339,7 @@ export default function VoiceCore({
       renderer.setAnimationLoop(null);
       io.disconnect();
       ro.disconnect();
+      themeObserver.disconnect();
       document.removeEventListener("visibilitychange", onVis);
       mq.removeEventListener("change", onMotion);
       window.removeEventListener("pointermove", onPointer);

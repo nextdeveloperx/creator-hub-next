@@ -111,7 +111,7 @@ export function Hero() {
           initial={reduce ? false : { opacity: 0, scale: 0.86 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="lp-stage relative mx-auto aspect-square w-full max-w-[540px]"
+          className="relative mx-auto aspect-square w-full max-w-[540px]"
         >
           <OrbFallback />
           {!webglFailed && (
@@ -136,12 +136,12 @@ export function Hero() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
                   transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  className="lp-glass !rounded-2xl flex max-w-full items-center gap-3 px-4 py-2.5 !bg-none !bg-black/70 !border-white/15 text-white"
+                  className="lp-glass !rounded-2xl flex max-w-full items-center gap-3 px-4 py-2.5"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--lp-violet)/0.25)] text-primary">
                     <Mic size={14} aria-hidden="true" />
                   </span>
-                  <span className="truncate text-sm text-white/90">&ldquo;{command.say}&rdquo;</span>
+                  <span className="truncate text-sm text-foreground/90">&ldquo;{command.say}&rdquo;</span>
                   <Waveform active={phase === 'speaking'} />
                 </motion.div>
               )}
@@ -152,7 +152,7 @@ export function Hero() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, transition: { duration: 0.15 } }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-sm text-emerald-300 backdrop-blur-md"
+                  className="flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-1.5 text-sm text-emerald-700 dark:text-emerald-300 backdrop-blur-md"
                 >
                   <Check size={14} aria-hidden="true" /> {command.done}
                 </motion.div>

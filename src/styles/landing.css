@@ -276,10 +276,3 @@
 
 /* framer-motion measures scroll offsets against the root <html> element, which needs a non-static position */
 html.nd-wide { position: relative; }
-
-/* The 3D orb is additive light: on the light theme it needs a dark stage to read. */
-.lp-stage { border-radius: 2.5rem; }
-.lp:not(:where(.dark *)) .lp-stage {
-  background: radial-gradient(circle at 50% 45%, hsl(250 60% 18%), hsl(240 60% 6%) 75%);
-  box-shadow: 0 30px 60px -30px hsl(250 60% 20% / 0.6);
-}
