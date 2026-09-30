@@ -110,17 +110,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
+  // Google sign-in runs on Vercel (api/auth/google.ts), not through Supabase Auth's Google provider.
   const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/dashboard`;
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-      },
-    });
-
-    return { error: error as Error | null };
+    window.location.assign('/api/auth/google');
+    return { error: null };
   };
 
   const signOut = async () => {
