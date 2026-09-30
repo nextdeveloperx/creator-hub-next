@@ -1,12 +1,80 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { GlowButton } from '@/components/ui/GlowButton';
-import { Plus, X, Pencil, Trash2 } from 'lucide-react';
+import { Plus, X, Pencil, Trash2, Camera, Loader2 } from 'lucide-react';
 import { getIcon } from '@/lib/iconMap';
 import { AdminAIProductForm, AIProductFormState, EMPTY_AI_PRODUCT_FORM, rowToForm } from './AdminAIProductForm';
 import type { AIProductRow } from '@/hooks/useAIProducts';
+
+const BUCKET = 'ai-product-media';
+
+async function uploadImage(file: File, folder: string): Promise<string> {
+  const ext = file.name.split('.').pop();
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file);
+  if (error) throw error;
+  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** One-click app icon + screenshot upload for a product row (saves straight to the DB). */
+function QuickMedia({ product, onDone }: { product: AIProductRow; onDone: () => void }) {
+  const { toast } = useToast();
+  const iconRef = useRef<HTMLInputElement>(null);
+  const shotsRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState<'icon' | 'shots' | null>(null);
+
+  const run = async (kind: 'icon' | 'shots', files: FileList | null) => {
+    if (!files?.length) return;
+    setBusy(kind);
+    try {
+      if (kind === 'icon') {
+        const url = await uploadImage(files[0], 'logos');
+        const { error } = await supabase.from('ai_products').update({ logo_url: url }).eq('id', product.id);
+        if (error) throw error;
+      } else {
+        const urls: string[] = [];
+        for (const f of Array.from(files)) urls.push(await uploadImage(f, 'screenshots'));
+        const { error } = await supabase.from('ai_products').update({ screenshots: [...(product.screenshots || []), ...urls] }).eq('id', product.id);
+        if (error) throw error;
+      }
+      toast({ title: kind === 'icon' ? 'App icon updated' : 'Screenshots added' });
+      onDone();
+    } catch (e) {
+      toast({ title: 'Upload failed', description: (e as Error).message, variant: 'destructive' });
+    } finally {
+      setBusy(null);
+      if (iconRef.current) iconRef.current.value = '';
+      if (shotsRef.current) shotsRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1 shrink-0">
+      <input ref={iconRef} type="file" accept="image/*" className="hidden" onChange={(e) => run('icon', e.target.files)} />
+      <input ref={shotsRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => run('shots', e.target.files)} />
+      <button
+        type="button"
+        onClick={() => iconRef.current?.click()}
+        disabled={busy !== null}
+        className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center gap-1"
+      >
+        {busy === 'icon' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+        {product.logo_url ? 'CHANGE ICON' : 'ADD ICON'}
+      </button>
+      <button
+        type="button"
+        onClick={() => shotsRef.current?.click()}
+        disabled={busy !== null}
+        className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-muted text-muted-foreground hover:text-foreground flex items-center gap-1"
+      >
+        {busy === 'shots' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
+        SCREENSHOTS ({product.screenshots?.length || 0})
+      </button>
+    </div>
+  );
+}
 
 export function AdminAIProductsSection() {
   const { toast } = useToast();
@@ -49,6 +117,7 @@ export function AdminAIProductsSection() {
         icon_name: form.icon_name,
         logo_url: form.logo_url || null,
         banner_url: form.banner_url || null,
+        screenshots: form.screenshots,
         is_coming_soon: form.is_coming_soon,
         is_active: form.is_active,
         is_featured: form.is_featured,
@@ -104,7 +173,7 @@ export function AdminAIProductsSection() {
         {products.map((p) => {
           const Icon = getIcon(p.icon_name);
           return (
-            <div key={p.id} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/10">
+            <div key={p.id} className="flex flex-wrap items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/10">
               {p.logo_url ? (
                 <img src={p.logo_url} alt={p.name} className="w-10 h-10 rounded-xl object-cover shrink-0 border border-border" />
               ) : (
@@ -116,6 +185,7 @@ export function AdminAIProductsSection() {
                 <p className="font-semibold text-sm truncate">{p.name} <span className="text-muted-foreground font-normal">₹{p.price}{p.original_price ? ` (was ₹${p.original_price})` : ''}</span></p>
                 <p className="text-xs text-muted-foreground truncate">{p.category} • {p.subtitle}</p>
               </div>
+              <QuickMedia product={p} onDone={fetchProducts} />
               {p.is_coming_soon && <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-500/15 text-amber-500 shrink-0">SOON</span>}
               <button onClick={() => toggleField(p, 'is_featured')} className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 ${p.is_featured ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
                 {p.is_featured ? 'FEATURED' : 'STANDARD'}

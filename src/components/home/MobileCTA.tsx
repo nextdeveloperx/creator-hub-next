@@ -1,34 +1,42 @@
-import { Link } from 'react-router-dom';
-import { Coffee, Crown, Package } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Bot, Crown, Package } from 'lucide-react';
 
+const ITEMS = [
+  { to: '/membership', label: 'Membership', icon: Crown },
+  { to: '/ai', label: 'AI', icon: Bot },
+  { to: '/shop', label: 'Shop', icon: Package },
+];
+
+/** Thumb-reach shortcuts on phones. Floats above the bottom edge so gesture bars never clip it. */
 export function MobileCTA() {
+  const { pathname } = useLocation();
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
-      <div className="bg-card/95 backdrop-blur-xl border-t border-border/50 px-2 py-2 safe-area-pb">
-        <div className="flex items-center justify-around gap-1">
-          <Link
-            to="/support"
-            className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors"
-          >
-            <Coffee className="w-5 h-5 text-primary" />
-            <span className="text-xs font-medium">Support</span>
-          </Link>
-          <Link
-            to="/membership"
-            className="flex flex-col items-center gap-1 px-6 py-2 rounded-lg bg-primary/20 border border-primary/30"
-          >
-            <Crown className="w-5 h-5 text-primary" />
-            <span className="text-xs font-medium text-primary">Membership</span>
-          </Link>
-          <Link
-            to="/shop"
-            className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors"
-          >
-            <Package className="w-5 h-5 text-primary" />
-            <span className="text-xs font-medium">Shop</span>
-          </Link>
-        </div>
-      </div>
-    </div>
+    <nav
+      aria-label="Quick actions"
+      className="md:hidden fixed inset-x-3 z-50 bottom-[max(0.75rem,env(safe-area-inset-bottom))]"
+    >
+      <ul className="grid grid-cols-3 gap-1 rounded-full border border-white/15 bg-[hsl(234_40%_9%/0.88)] p-1.5 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+        {ITEMS.map(({ to, label, icon: Icon }) => {
+          const active = pathname === to || pathname.startsWith(`${to}/`);
+          return (
+            <li key={to}>
+              <Link
+                to={to}
+                aria-current={active ? 'page' : undefined}
+                className={`flex h-14 flex-col items-center justify-center gap-0.5 rounded-full text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(188_95%_58%)] ${
+                  active
+                    ? 'bg-gradient-to-r from-violet-500 to-blue-500 text-white'
+                    : 'text-white/75 active:bg-white/10'
+                }`}
+              >
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                {label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }

@@ -18,6 +18,7 @@ export interface AIProductRow {
   icon_name: string;
   logo_url: string | null;
   banner_url: string | null;
+  screenshots: string[];
   is_coming_soon: boolean;
   is_active: boolean;
   is_featured: boolean;

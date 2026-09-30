@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_product_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          product_id: string
+          rating: number
+          updated_at: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          rating: number
+          updated_at?: string
+          user_id: string
+          user_name?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "ai_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_products: {
         Row: {
           badge: string
@@ -35,6 +76,7 @@ export type Database = {
           name: string
           original_price: number | null
           price: number
+          screenshots: string[]
           slug: string
           subtitle: string
           updated_at: string
@@ -59,6 +101,7 @@ export type Database = {
           name: string
           original_price?: number | null
           price?: number
+          screenshots?: string[]
           slug: string
           subtitle?: string
           updated_at?: string
@@ -83,6 +126,7 @@ export type Database = {
           name?: string
           original_price?: number | null
           price?: number
+          screenshots?: string[]
           slug?: string
           subtitle?: string
           updated_at?: string

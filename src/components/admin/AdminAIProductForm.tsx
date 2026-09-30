@@ -27,6 +27,7 @@ export interface AIProductFormState {
   icon_name: string;
   logo_url: string;
   banner_url: string;
+  screenshots: string[];
   is_coming_soon: boolean;
   is_active: boolean;
   is_featured: boolean;
@@ -37,7 +38,7 @@ export const EMPTY_AI_PRODUCT_FORM: AIProductFormState = {
   slug: '', name: '', category: 'assistant', badge: '', subtitle: '',
   price: '', original_price: '', features: '', button_text: 'Buy Now',
   gradient_from: '#7c3aed', gradient_to: '#a855f7', border_color: 'border-primary/30',
-  icon_name: 'Sparkles', logo_url: '', banner_url: '',
+  icon_name: 'Sparkles', logo_url: '', banner_url: '', screenshots: [],
   is_coming_soon: false, is_active: true, is_featured: false, display_order: '0',
 };
 
@@ -49,7 +50,7 @@ export function rowToForm(r: AIProductRow): AIProductFormState {
     price: String(r.price), original_price: r.original_price ? String(r.original_price) : '',
     features: r.features.join(', '), button_text: r.button_text,
     gradient_from: r.gradient_from, gradient_to: r.gradient_to, border_color: r.border_color,
-    icon_name: r.icon_name, logo_url: r.logo_url || '', banner_url: r.banner_url || '',
+    icon_name: r.icon_name, logo_url: r.logo_url || '', banner_url: r.banner_url || '', screenshots: r.screenshots || [],
     is_coming_soon: r.is_coming_soon, is_active: r.is_active, is_featured: r.is_featured,
     display_order: String(r.display_order),
   };
@@ -70,6 +71,8 @@ export function AdminAIProductForm({ form, onChange, onSubmit, onCancel, saving,
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const shotsInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingShots, setUploadingShots] = useState(false);
 
   const set = <K extends keyof AIProductFormState>(key: K, value: AIProductFormState[K]) =>
     onChange({ ...form, [key]: value });
@@ -85,6 +88,24 @@ export function AdminAIProductForm({ form, onChange, onSubmit, onCancel, saving,
       set(field, publicUrl);
     } finally {
       setLoadingFn(false);
+    }
+  };
+
+  const uploadScreenshots = async (files: FileList) => {
+    setUploadingShots(true);
+    try {
+      const urls: string[] = [];
+      for (const file of Array.from(files)) {
+        const ext = file.name.split('.').pop();
+        const path = `screenshots/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await supabase.storage.from('ai-product-media').upload(path, file);
+        if (error) { toast({ title: 'Upload failed', description: error.message, variant: 'destructive' }); continue; }
+        urls.push(supabase.storage.from('ai-product-media').getPublicUrl(path).data.publicUrl);
+      }
+      if (urls.length) set('screenshots', [...form.screenshots, ...urls]);
+    } finally {
+      setUploadingShots(false);
+      if (shotsInputRef.current) shotsInputRef.current.value = '';
     }
   };
 
@@ -205,6 +226,27 @@ export function AdminAIProductForm({ form, onChange, onSubmit, onCancel, saving,
               {uploadingBanner ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : <><UploadCloud className="w-4 h-4 mx-auto mb-1" />Upload banner</>}
             </div>
           )}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Screenshots (portrait images work best — shown on the product page)</Label>
+        <input ref={shotsInputRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => e.target.files?.length && uploadScreenshots(e.target.files)} />
+        <div className="flex flex-wrap gap-2">
+          {form.screenshots.map((url, i) => (
+            <div key={url} className="relative">
+              <img src={url} alt={`Screenshot ${i + 1}`} className="w-16 h-28 rounded-lg object-cover border border-border" />
+              <button
+                type="button"
+                aria-label={`Remove screenshot ${i + 1}`}
+                onClick={() => set('screenshots', form.screenshots.filter((u) => u !== url))}
+                className="absolute -top-2 -right-2 p-1 rounded-full bg-background border border-border hover:bg-muted"
+              ><X className="w-3 h-3" /></button>
+            </div>
+          ))}
+          <div onClick={() => shotsInputRef.current?.click()} className="w-16 h-28 border-2 border-dashed rounded-lg cursor-pointer flex flex-col items-center justify-center text-xs text-muted-foreground hover:border-primary/50 transition-colors">
+            {uploadingShots ? <Loader2 className="w-4 h-4 animate-spin" /> : <><UploadCloud className="w-4 h-4 mb-1" />Add</>}
+          </div>
         </div>
       </div>
 

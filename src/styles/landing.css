@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap');
+
+/*
+  Landing page ("Aurora glass").
+  One always-dark canvas: a fixed aurora behind everything, frosted-glass surfaces on top,
+  violet -> cyan as the single brand gradient. No light bands.
+*/
+.lp {
+  --background: 234 50% 5%;
+  --foreground: 230 40% 97%;
+  --card: 234 40% 10%;
+  --card-foreground: 230 40% 97%;
+  --popover: 234 40% 10%;
+  --popover-foreground: 230 40% 97%;
+  --muted: 234 30% 15%;
+  --muted-foreground: 230 20% 74%;
+  --border: 230 30% 24%;
+  --input: 230 30% 24%;
+  --primary: 262 92% 70%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 188 95% 58%;
+  --secondary-foreground: 234 50% 5%;
+  --accent: 188 95% 58%;
+  --accent-foreground: 234 50% 5%;
+  --ring: 188 95% 58%;
+
+  --lp-violet: 262 92% 66%;
+  --lp-cyan: 188 95% 58%;
+  --lp-pink: 322 90% 66%;
+  --lp-iris: 262 92% 70%;
+  --lp-signal: 188 95% 58%;
+  --lp-grad: linear-gradient(120deg, hsl(262 92% 66%), hsl(222 95% 62%) 55%, hsl(188 95% 58%));
+  --lp-pad: clamp(4.5rem, 9vw, 8.5rem);
+
+  position: relative;
+  isolation: isolate;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  overflow-x: clip;
+}
+
+.lp .lp-display,
+.lp .lp-h2,
+.lp .lp-title {
+  font-family: 'Sora', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+.lp .lp-display {
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+}
+.lp .lp-h2 {
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  font-size: clamp(2.2rem, 4.8vw, 4.75rem);
+  text-wrap: balance;
+}
+.lp .lp-title {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  font-size: clamp(1.15rem, 1.5vw, 1.6rem);
+  line-height: 1.2;
+}
+.lp .lp-lead {
+  font-size: clamp(1.02rem, 1.2vw, 1.3rem);
+  line-height: 1.65;
+  max-width: 58ch;
+}
+.lp .container {
+  max-width: 1600px;
+  padding-inline: clamp(1.25rem, 4.5vw, 5rem);
+}
+.lp-section { padding-block: var(--lp-pad); position: relative; }
+
+.lp-gradient-text {
+  background: linear-gradient(100deg, hsl(262 95% 76%), hsl(222 95% 72%) 40%, hsl(188 95% 64%) 70%, hsl(262 95% 76%));
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lp-shine { animation: lp-shine 8s linear infinite; }
+@keyframes lp-shine { to { background-position: -250% 0; } }
+
+/* ---------- Fixed aurora ---------- */
+/* Static layered gradients on a composited layer: no filter: blur, no animation, so scrolling never repaints it. */
+.lp-aurora {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
+  transform: translateZ(0);
+  background:
+    radial-gradient(60vw 60vw at 5% -10%, hsl(262 92% 50% / 0.55), transparent 65%),
+    radial-gradient(55vw 55vw at 105% 25%, hsl(200 95% 45% / 0.34), transparent 65%),
+    radial-gradient(50vw 50vw at 35% 115%, hsl(322 85% 50% / 0.28), transparent 65%),
+    hsl(var(--background));
+}
+.lp-blob { display: none; }
+.lp-dots {
+  position: absolute; inset: 0;
+  background-image: radial-gradient(hsl(230 40% 97% / 0.1) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 30%, #000 10%, transparent 75%);
+}
+
+/* ---------- Glass ---------- */
+.lp-glass {
+  background: linear-gradient(145deg, hsl(232 38% 14% / 0.92), hsl(234 40% 9% / 0.92));
+  border: 1px solid hsl(230 40% 97% / 0.12);
+  border-radius: 1.75rem;
+  box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.08);
+}
+
+/* Gradient hairline that lights up on hover */
+.lp-tile {
+  position: relative;
+  overflow: hidden;
+  transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1), border-color 300ms ease;
+}
+.lp-tile::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(460px circle at var(--tx, 50%) var(--ty, 0%), hsl(262 92% 66% / 0.28), hsl(188 95% 58% / 0.08) 45%, transparent 65%);
+  opacity: 0; transition: opacity 300ms ease; pointer-events: none;
+}
+.lp-tile:hover { transform: translateY(-5px); border-color: hsl(262 92% 70% / 0.55); }
+.lp-tile:hover::before { opacity: 1; }
+
+/* ---------- Buttons ---------- */
+.lp-btn {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+  min-height: 3.4rem; padding: 0 1.9rem;
+  border-radius: 999px;
+  font-weight: 700; font-size: 0.98rem;
+  cursor: pointer; overflow: hidden;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+.lp-btn:focus-visible, .lp-card-link:focus-visible {
+  outline: 2px solid hsl(var(--lp-cyan));
+  outline-offset: 3px;
+}
+.lp-btn-primary {
+  background: var(--lp-grad);
+  color: #fff;
+  box-shadow: 0 14px 44px -12px hsl(262 92% 60% / 0.75);
+}
+.lp-btn-primary::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.4) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.lp-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 54px -12px hsl(262 92% 62% / 0.9); }
+.lp-btn-primary:hover::after { transform: translateX(120%); transition: transform 700ms ease; }
+.lp-btn-ghost {
+  border: 1.5px solid hsl(230 40% 97% / 0.25);
+  background: hsl(230 40% 97% / 0.04);
+  color: hsl(var(--foreground));
+}
+.lp-btn-ghost:hover { border-color: hsl(230 40% 97% / 0.7); background: hsl(230 40% 97% / 0.1); }
+
+/* ---------- Marquees ---------- */
+@keyframes lp-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes lp-marquee-rev { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+@keyframes lp-vmarquee { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+.lp-track { display: flex; width: max-content; animation: lp-marquee 44s linear infinite; }
+.lp-track-rev { animation-name: lp-marquee-rev; animation-duration: 54s; }
+.lp-vtrack { display: flex; flex-direction: column; animation: lp-vmarquee 60s linear infinite; }
+.lp-vtrack-rev { animation-direction: reverse; animation-duration: 72s; }
+.lp-pause:hover .lp-track, .lp-pause:hover .lp-vtrack { animation-play-state: paused; }
+
+.lp-rail {
+  display: flex; gap: 1.25rem; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 1.25rem;
+  scrollbar-width: thin; scrollbar-color: hsl(262 92% 66% / 0.6) transparent;
+}
+.lp-rail > * { scroll-snap-align: start; flex-shrink: 0; }
+
+@keyframes lp-blink { 50% { opacity: 0; } }
+.lp-caret { display: inline-block; width: 0.55ch; height: 1.05em; background: hsl(var(--lp-cyan)); vertical-align: -0.15em; animation: lp-blink 1s steps(1) infinite; }
+@keyframes lp-pulse-ring { 0% { box-shadow: 0 0 0 0 hsl(var(--lp-cyan) / 0.6); } 100% { box-shadow: 0 0 0 12px hsl(var(--lp-cyan) / 0); } }
+.lp-live { animation: lp-pulse-ring 1.8s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-btn, .lp-tile { transition: none; }
+  .lp-btn-primary:hover, .lp-tile:hover { transform: none; }
+  .lp-btn-primary:hover::after { transition: none; }
+}
+
+/* Let the shared navbar/footer follow the wide layout on the home page */
+.nd-wide nav .container,
+.nd-wide footer .container {
+  max-width: 1600px;
+  padding-inline: clamp(1.25rem, 4.5vw, 5rem);
+}
+
+.lp .nd-display { font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -0.03em; }
+
+/* Orb fallback + command waveform (ported from the jarvis-myra-ai-hub hero) */
+@keyframes lp-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes lp-orbit { from { transform: rotateX(68deg) rotateZ(0deg); } to { transform: rotateX(68deg) rotateZ(360deg); } }
+@keyframes lp-voicebar { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+.lp-breathe { animation: lp-breathe 4.5s ease-in-out infinite; }
+.lp-orbit { animation: lp-orbit 14s linear infinite; }
+.lp-bar { animation: lp-voicebar 0.9s ease-in-out infinite; }
+
+/* Tech marquee: soft edge fade + brand-coloured glow on hover */
+.lp-fade {
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.lp-chip { transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), border-color 300ms ease, box-shadow 300ms ease; }
+.lp-chip:hover {
+  transform: translateY(-4px) scale(1.04);
+  border-color: color-mix(in srgb, var(--chip) 65%, transparent);
+  box-shadow: 0 16px 40px -14px color-mix(in srgb, var(--chip) 55%, transparent), inset 0 1px 0 hsl(0 0% 100% / 0.1);
+}
+
+@keyframes lp-spin { to { transform: rotate(360deg); } }
+.lp-ring { animation: lp-spin 12s linear infinite; }
+
+/* The fixed aurora lives inside .lp (a positioned stacking context), so it paints over the un-positioned footer. Lift the footer above it. */
+.nd-wide footer {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 767px) {
+  .nd-wide footer { padding-bottom: 5.75rem; }
+}
+
+/* framer-motion measures scroll offsets against the root <html> element, which needs a non-static position */
+html.nd-wide { position: relative; }
