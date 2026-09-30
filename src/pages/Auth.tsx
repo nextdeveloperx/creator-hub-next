@@ -39,19 +39,6 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Errors bounced back from the Google sign-in flow
-  useEffect(() => {
-    const code = searchParams.get('error');
-    if (!code) return;
-    const messages: Record<string, string> = {
-      google_denied: 'Google sign-in was cancelled.',
-      invalid_state: 'Sign-in expired. Please try again.',
-      unverified_email: 'Your Google email is not verified.',
-      not_configured: 'Google sign-in is not set up yet.',
-    };
-    toast({ title: 'Sign-in failed', description: messages[code] ?? 'Could not sign you in with Google. Please try again.', variant: 'destructive' });
-  }, [searchParams, toast]);
-
   useEffect(() => {
     // Wait for the role check so admins land on /admin instead of the customer dashboard
     if (user && adminChecked) navigate(isAdmin ? '/admin' : '/dashboard', { replace: true });

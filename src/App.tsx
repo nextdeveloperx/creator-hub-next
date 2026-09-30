@@ -11,7 +11,6 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { AnimatePresence } from "framer-motion";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
 import Support from "./pages/Support";
 import Membership from "./pages/Membership";
 import Shop from "./pages/Shop";
@@ -58,7 +57,6 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/support" element={<Support />} />
               <Route path="/membership" element={<Membership />} />
